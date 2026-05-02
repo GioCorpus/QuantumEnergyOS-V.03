@@ -577,6 +577,16 @@ Lee [CONTRIBUTING.md](CONTRIBUTING.md) para las reglas de contribución.
 
 ---
 
+## ☕ Apoya el Proyecto
+
+QuantumEnergyOS es desarrollado de forma independiente desde Mexicali con dedicación y recursos limitados. Si este proyecto te inspira o te resulta útil, considera apoyar su desarrollo continuo.
+
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/giocorpus)
+
+Su apoyo ayuda a cubrir costos de servidores, hardware de prueba, certificaciones y tiempo de desarrollo para avanzar hacia implementaciones más ambiciosas (integración real con Qiskit, pruebas en hardware fotónico y expansión del alcance).
+
+¡Gracias por ser parte de esta misión!
+
 ## 📜 Licencia
 
 MIT — libre para usar, modificar y distribuir.
