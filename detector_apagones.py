@@ -1,14 +1,16 @@
 import requests
 import time
 from datetime import datetime
+import os
 
 # ==================== CONFIGURA ESTO ====================
 TELEGRAM_TOKEN = "TU_TOKEN"
 TELEGRAM_CHAT_ID = "TU_CHAT_ID"
 WHATSAPP_PHONE = "521XXXXXXXXXX"
 
-# URL de tu QuantumEnergyOS (cámbiala por la tuya)
-QUANTUM_API = "http://localhost:8080/api/alert"   # o la IP de tu servidor
+# URL de tu QuantumEnergyOS (por defecto localhost:8000)
+QEOS_API_URL = os.environ.get("QEOS_API_URL", "http://localhost:8000")
+QUANTUM_API = f"{QEOS_API_URL}/api/alert"
 # ======================================================
 
 def enviar_a_quantum(data):

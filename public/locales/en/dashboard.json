@@ -1,0 +1,31 @@
+{
+  "dashboard": {
+    "title": "QuantumEnergyOS Dashboard",
+    "location": "Mexicali, Baja California",
+    "status": {
+      "operational": "Operational",
+      "warning": "Warning",
+      "critical": "Critical"
+    }
+  },
+  "grid": {
+    "nodes": "Grid Nodes",
+    "loadFactor": "Load Factor",
+    "totalLoad": "Total Load",
+    "totalCapacity": "Total Capacity",
+    "alertLevels": {
+      "black": "Blackout Risk",
+      "red": "High Risk",
+      "orange": "Warning",
+      "yellow": "Caution",
+      "green": "Normal"
+    }
+  },
+  "quantum": {
+    "qaoa": "QAOA Optimal Balance",
+    "vqe": "VQE Molecular Simulation",
+    "cooling": "Cryogenic Cooling Protocol",
+    "fusion": "D-T Fusion Reactor Simulation",
+    "braiding": "Majorana Braiding Debug"
+  }
+}

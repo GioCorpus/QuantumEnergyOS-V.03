@@ -1,12 +1,15 @@
 """
 api/server.py — Servidor Flask principal de QuantumEnergyOS V.02
-═══════════════════════════════════════════════════════════════════
-Dashboard de monitoreo energético + API cuántica completa.
-Integra: IBM Qiskit · Microsoft Q# · PhotonicQ Bridge · Cuarzo 4D
-
-Autor: GioCorpus — Mexicali, Baja California
+...
 """
 from __future__ import annotations
+
+# Cargar variables de entorno desde .env (opcional)
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 import hashlib
 import json
@@ -26,6 +29,25 @@ from core import (
     simular_fusion,
     simular_braiding,
 )
+# Climate Orchestrator
+from climate_orchestrator import (
+    ClimateOrchestrator,
+    create_orchestrator,
+    RiskLevel,
+    ClimateData,
+)
+from climate_orchestrator.bridge import get_bridge
+from signal_integrity import (
+    simulate_grid_scope,
+    get_scope_status,
+    calculate_eqs,
+    THD_NOMINAL,
+    THD_CRITICAL,
+    CREST_NOMINAL,
+    CREST_SATURATION,
+    PHASE_NOMINAL,
+    PHASE_RISK,
+)
 import threading
 import queue
 
@@ -33,6 +55,7 @@ import queue
 class QuantumConfig:
     ibm_token: str = ""
     azure_token: str = ""
+    openweather_api_key: str = ""
     port: int = 8000
     qiskit_backend: str = "aer_simulator"
     log_level: str = "INFO"
@@ -42,6 +65,7 @@ class QuantumConfig:
         return cls(
             ibm_token=os.environ.get("IBM_QUANTUM_TOKEN", ""),
             azure_token=os.environ.get("AZURE_QUANTUM_TOKEN", ""),
+            openweather_api_key=os.environ.get("OPENWEATHER_API_KEY", ""),
             port=int(os.environ.get("PORT", 8000)),
             qiskit_backend=os.environ.get("QISKIT_AER_BACKEND", "aer_simulator"),
             log_level=os.environ.get("LOG_LEVEL", "INFO"),
@@ -58,6 +82,19 @@ config = QuantumConfig.from_env()
 app = Flask(__name__)
 CORS(app, origins=["http://localhost:3000", "http://localhost:1420", "*"])
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
+
+# Climate Orchestrator (inicializado lazy)
+_climate_orchestrator: ClimateOrchestrator | None = None
+
+def get_orchestrator() -> ClimateOrchestrator:
+    global _climate_orchestrator
+    if _climate_orchestrator is None:
+        _climate_orchestrator = create_orchestrator()
+        if config.openweather_api_key:
+            log.info("Climate Orchestrator — OpenWeatherMap OK")
+        else:
+            log.warning("Climate Orchestrator — OPENWEATHER_API_KEY no configurada")
+    return _climate_orchestrator
 
 _task_queue = queue.Queue()
 
@@ -114,6 +151,7 @@ _system_state = {
     "energy_saved_kw": 0.0,
     "ibm_available":  IBM_AVAILABLE,
     "qsharp_available": QSHARP_AVAILABLE,
+    "openweather_available": bool(config.openweather_api_key),
     "location":       "Mexicali, Baja California, México",
     "mission":        "Nunca más apagones en Mexicali",
 }
@@ -193,6 +231,146 @@ def emit_grid_updates():
 
 socketio.start_background_task(emit_grid_updates)
 
+# ── Grid-Scope: Virtual Oscilloscope with EQS ─────────────────────────────────────
+
+@app.get("/api/v1/grid/scope/<int:node_id>")
+def grid_scope(node_id: int):
+    """Get signal integrity metrics for a specific grid node."""
+    load_percent = 0.8
+    if node_id < len(_grid_loads_kw):
+        load_percent = _grid_loads_kw[node_id] / _grid_capacity_kw[node_id]
+    
+    result = simulate_grid_scope(node_id=node_id, load_percent=load_percent)
+    
+    return jsonify({
+        "success": True,
+        "node_id": node_id,
+        "node_name": _node_names[node_id] if node_id < len(_node_names) else f"Node {node_id}",
+        "eqs": result.score,
+        "status": get_scope_status(result.score),
+        "thd": round(result.metrics.thd * 100, 2),
+        "crest_factor": round(result.metrics.crest_factor, 3),
+        "power_factor": round(result.metrics.power_factor, 3),
+        "advisory": result.advisory,
+        "risk_flags": result.risk_flags,
+        "thresholds": {
+            "thd_nominal_pct": THD_NOMINAL * 100,
+            "thd_critical_pct": THD_CRITICAL * 100,
+            "crest_nominal": CREST_NOMINAL,
+            "crest_saturation": CREST_SATURATION,
+            "phase_nominal": PHASE_NOMINAL,
+            "phase_risk": PHASE_RISK,
+        },
+        "timestamp": result.metrics.timestamp,
+    })
+
+
+@app.get("/api/v1/grid/scope")
+def grid_scope_all():
+    """Get EQS for all grid nodes."""
+    nodes = []
+    for i in range(len(_grid_loads_kw)):
+        load_percent = _grid_loads_kw[i] / _grid_capacity_kw[i]
+        result = simulate_grid_scope(node_id=i, load_percent=load_percent)
+        nodes.append({
+            "node_id": i,
+            "node_name": _node_names[i],
+            "eqs": result.score,
+            "status": get_scope_status(result.score),
+            "thd_pct": round(result.metrics.thd * 100, 2),
+            "crest_factor": round(result.metrics.crest_factor, 3),
+            "power_factor": round(result.metrics.power_factor, 3),
+            "risk_flags": result.risk_flags,
+        })
+    
+    avg_eqs = sum(n["eqs"] for n in nodes) / len(nodes)
+    
+    return jsonify({
+        "success": True,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "nodes": nodes,
+        "average_eqs": round(avg_eqs, 2),
+        "system_status": get_scope_status(avg_eqs),
+    })
+
+
+def emit_scope_updates():
+    """Background task: emit EQS updates every 3 seconds."""
+    while True:
+        socketio.sleep(3)
+        nodes = []
+        for i in range(len(_grid_loads_kw)):
+            load_percent = _grid_loads_kw[i] / _grid_capacity_kw[i]
+            result = simulate_grid_scope(node_id=i, load_percent=load_percent)
+            nodes.append({
+                "node_id": i,
+                "name": _node_names[i],
+                "eqs": result.score,
+                "status": get_scope_status(result.score),
+                "thd_pct": round(result.metrics.thd * 100, 2),
+                "advisory": result.advisory,
+            })
+        
+        avg_eqs = sum(n["eqs"] for n in nodes) / len(nodes) if nodes else 0
+        
+        socketio.emit('scope_update', {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "nodes": nodes,
+            "average_eqs": round(avg_eqs, 2),
+            "system_status": get_scope_status(avg_eqs),
+        })
+
+
+socketio.start_background_task(emit_scope_updates)
+
+# ── Climate Monitor Background Task ────────────────────────────────────────────
+def climate_monitor_loop():
+    """Monitor autónomo: evalúa clima cada 5 min y ejecuta acciones si riesgo alto."""
+    dry_run = os.environ.get("CLIMATE_DRY_RUN", "true").lower() == "true"
+    log.info(f"[CLIMATE MONITOR] Iniciado — dry_run={dry_run}")
+
+    # Esperar 10 segundos antes de primera ejecución para que el servidor arranque
+    socketio.sleep(10)
+
+    while True:
+        try:
+            orchestrator = get_orchestrator()
+            result = orchestrator.run_autonomous_cycle(
+                weather_lat=32.6245,
+                weather_lon=-115.4523,
+                execute_actions=True,
+                dry_run=dry_run,
+            )
+            if result.risk_level != RiskLevel.NORMAL:
+                log.warning(
+                    f"[CLIMATE MONITOR] Risk={result.risk_level} | "
+                    f"Predictions={len(result.predictions)} | Actions={len(result.recommended_actions)}"
+                )
+                # Emitir alerta vía WebSocket a clientes conectados
+                socketio.emit('climate_alert', {
+                    "timestamp": result.timestamp,
+                    "risk_level": result.risk_level,
+                    "predictions": [
+                        {"event_type": p.event_type, "description": p.description}
+                        for p in result.predictions
+                    ],
+                    "actions_taken": [a.id for a in result.recommended_actions],
+                    "explanation": result.explanation.split('\n')[-1] if result.explanation else "",
+                })
+            else:
+                log.debug("[CLIMATE MONITOR] Sistema estable")
+        except Exception as e:
+            log.error(f"[CLIMATE MONITOR] Error: {e}")
+
+        # Ciclo cada 5 minutos
+        socketio.sleep(300)
+
+if os.environ.get("CLIMATE_MONITOR_ENABLED", "false").lower() == "true":
+    socketio.start_background_task(climate_monitor_loop)
+    log.info("Climate Monitor background task habilitado")
+else:
+    log.info("Climate Monitor background task deshabilitado (CLIMATE_MONITOR_ENABLED=false)")
+
 @app.get("/api/v1/status")
 def status():
     return jsonify({
@@ -202,6 +380,10 @@ def status():
             "qsharp":       QSHARP_AVAILABLE,
             "qiskit_aer":   True,
             "photonic_sim": True,
+        },
+        "climate_orchestrator": {
+            "available": True,
+            "openweather_configured": bool(config.openweather_api_key),
         },
     })
 
@@ -800,7 +982,269 @@ def qsharp_run():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
-# ── Cuarzo 4D ─────────────────────────────────────────────────────────
+# ── Alertas externas (detector_apagones, etc.) ────────────────────────────────
+
+@app.post("/api/alert")
+def receive_alert():
+    """
+    Recibe alertas externas (apagones, eventos climáticos, etc.).
+    Integra con Climate Orchestrator para evaluación inmediata.
+    """
+    data = request.get_json(silent=True) or {}
+    alert_type = data.get("type", "unknown")
+    location = data.get("location", "unknown")
+    severity = data.get("severity", "medium")
+
+    log.warning(f"[ALERT] {alert_type} — {location} — severity={severity}")
+
+    # Si es un apagón, disparar evaluación crítica inmediata
+    if alert_type == "power_outage":
+        orchestrator = get_orchestrator()
+        # Simular datos de emergencia
+        from climate_orchestrator import ClimateData
+        emergency_data = ClimateData(
+            location=location,
+            temperature_c=50.0,  # asumir calor extremo durante apagón
+            humidity=20,
+            power_grid_load=0.95,  # red sobresaturada
+            cpu_load=0.90,
+            energy_reserve=10,  # reserva baja
+            time_of_day=datetime.now().strftime("%H:%M"),
+            forecast_next_6h_temp=[],
+        )
+        result = orchestrator.evaluate(emergency_data)
+
+        # Execute critical actions immediately (dry_run=false)
+        if result.risk_level == RiskLevel.CRITICAL:
+            bridge = get_bridge()
+            for action in result.recommended_actions:
+                try:
+                    exec_result = bridge.execute_sync(action.id, dry_run=False)
+                    log.info(f"[EMERGENCY ACTION] {action.id} → {exec_result.get('status')}")
+                except Exception as e:
+                    log.error(f"[EMERGENCY] Error: {e}")
+
+        return jsonify({
+            "received": True,
+            "triggered_climate_evaluation": True,
+            "risk_level": result.risk_level,
+            "actions_taken": [a.id for a in result.recommended_actions],
+        }), 200
+
+    return jsonify({"received": True}), 200
+
+# ── Climate Orchestrator — Predicción y manejo de climas extremos ────────────────
+
+@app.post("/api/v1/climate/analyze")
+def climate_analyze():
+    """
+    Analiza condiciones climáticas y energéticas, devuelve predicciones y acciones.
+
+    Body JSON (opcional — si no se provee, usa métricas del sistema + OpenWeatherMap):
+        {
+            "temperature_c": 47,
+            "humidity": 18,
+            "power_grid_load": 0.92,
+            "cpu_load": 0.78,
+            "energy_reserve": 65,
+            "time_of_day": "16:30",
+            "forecast_next_6h_temp": [48,49,50,49,47,45],
+            "wind_kph": 12,
+            "lat": 32.6245,
+            "lon": -115.4523,
+            "execute_actions": false,   // si ejecutar acciones reales
+            "dry_run": true            // simular sin ejecutar
+        }
+    """
+    data = request.get_json(silent=True) or {}
+
+    # Si se提供 coordenadas, intentar fetch de OpenWeatherMap
+    lat = data.get("lat", 32.6245)
+    lon = data.get("lon", -115.4523)
+
+    orchestrator = get_orchestrator()
+
+    # Obtener datos externos si hay API key
+    weather_data = None
+    forecast_data = None
+    if config.openweather_api_key:
+        try:
+            from climate_orchestrator.weather import OpenWeatherMapClient
+            client = OpenWeatherMapClient(api_key=config.openweather_api_key)
+            weather_data = client.get_current(lat, lon)
+            forecast_data = client.get_forecast(lat, lon, hours=6)
+            log.info(f"[CLIMATE] Datos OWM: temp={weather_data.get('temp_c')}°C")
+        except Exception as e:
+            log.error(f"[CLIMATE] Error OWM: {e}")
+
+    # Construir ClimateData con fallbacks robustos
+    temperature_c = data.get("temperature_c")
+    if temperature_c is None:
+        temperature_c = weather_data["temp_c"] if weather_data else 35.0
+
+    humidity = data.get("humidity")
+    if humidity is None:
+        humidity = weather_data["humidity"] if weather_data else 50
+
+    wind_kph = data.get("wind_kph")
+    if wind_kph is None:
+        wind_kph = (weather_data["wind_mps"] * 3.6) if weather_data else 0
+
+    forecast = data.get("forecast_next_6h_temp")
+    if forecast is None:
+        forecast = [f["temp_c"] for f in forecast_data] if forecast_data else []
+
+    climate_input = ClimateData(
+        location=orchestrator.location,
+        temperature_c=float(temperature_c),
+        humidity=int(humidity),
+        power_grid_load=float(data.get("power_grid_load", 0.70)),
+        cpu_load=float(data.get("cpu_load", 0.50)),
+        energy_reserve=int(data.get("energy_reserve", 80)),
+        time_of_day=data.get("time_of_day", datetime.now().strftime("%H:%M")),
+        forecast_next_6h_temp=forecast,
+        wind_kph=float(wind_kph),
+    )
+
+    # Evaluar
+    result = orchestrator.evaluate(climate_input)
+
+    # Ejecutar acciones si se solicita
+    if data.get("execute_actions", False) and result.risk_level != RiskLevel.NORMAL:
+        dry_run = data.get("dry_run", True)
+        bridge = get_bridge()
+        for action in result.recommended_actions:
+            try:
+                import asyncio
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                exec_result = loop.run_until_complete(
+                    bridge.execute(action.id, {"dry_run": dry_run})
+                )
+                loop.close()
+                log.info(f"[ACTION] {action.id} → {exec_result.get('status')}")
+            except Exception as e:
+                log.error(f"[ACTION] Error executing {action.id}: {e}")
+
+    # Retornar como JSON
+    return jsonify({
+        "success": True,
+        "data": {
+            "risk_level": result.risk_level,
+            "predictions": [
+                {
+                    "event_type": p.event_type,
+                    "confidence": p.confidence,
+                    "time_to_event_min": p.time_to_event_min,
+                    "description": p.description,
+                }
+                for p in result.predictions
+            ],
+            "recommended_actions": [
+                {
+                    "id": a.id,
+                    "name": a.name,
+                    "command": a.command,
+                    "description": a.description,
+                    "impact_kw": a.impact_kw,
+                }
+                for a in result.recommended_actions
+            ],
+            "explanation": result.explanation,
+            "timestamp": result.timestamp,
+            "location": climate_input.location,
+            "input_snapshot": {
+                "temperature_c": climate_input.temperature_c,
+                "humidity": climate_input.humidity,
+                "power_grid_load": climate_input.power_grid_load,
+                "cpu_load": climate_input.cpu_load,
+                "energy_reserve": climate_input.energy_reserve,
+            },
+        }
+    })
+
+@app.get("/api/v1/climate/status")
+def climate_status():
+    """Estado del Climate Orchestrator."""
+    orchestrator = get_orchestrator()
+    return jsonify({
+        "status": "operational",
+        "location": orchestrator.location,
+        "openweather_configured": bool(config.openweather_api_key),
+        "cache_size": len(orchestrator._cache),
+        "thresholds": {
+            "temp_critical_c": orchestrator.TEMP_CRITICAL_C,
+            "temp_warning_c": orchestrator.TEMP_WARNING_C,
+            "grid_load_critical": orchestrator.GRID_LOAD_CRITICAL,
+            "grid_load_warning": orchestrator.GRID_LOAD_WARNING,
+            "cpu_load_critical": orchestrator.CPU_LOAD_CRITICAL,
+            "energy_reserve_critical": orchestrator.ENERGY_RESERVE_CRITICAL,
+        },
+    })
+
+@app.post("/api/v1/climate/actions/<action_id>/execute")
+def execute_climate_action(action_id: str):
+    """
+    Ejecuta una acción específica del Climate Orchestrator.
+
+    Args:
+        action_id: ID de la acción (ej. 'limit_cpu_frequency')
+    """
+    dry_run = request.args.get("dry_run", "true").lower() == "true"
+
+    orchestrator = get_orchestrator()
+    action = orchestrator._actions_registry.get(action_id)
+
+    if not action:
+        return jsonify({"success": False, "error": f"Unknown action: {action_id}"}), 404
+
+    result = orchestrator.execute_action(action, dry_run=dry_run)
+    result["dry_run"] = dry_run
+
+    return jsonify({"success": True, "data": result})
+
+@app.get("/api/v1/climate/autocycle")
+def climate_autocycle():
+    """
+    Ejecuta ciclo autónomo: fetch weather → evaluate → recommend.
+
+    Query params:
+        lat, lon: coordenadas (default Mexicali)
+        execute: si ejecutar acciones (default false)
+        dry_run: si simular (default true)
+    """
+    lat = float(request.args.get("lat", 32.6245))
+    lon = float(request.args.get("lon", -115.4523))
+    execute = request.args.get("execute", "false").lower() == "true"
+    dry_run = request.args.get("dry_run", "true").lower() == "true"
+
+    orchestrator = get_orchestrator()
+    result = orchestrator.run_autonomous_cycle(
+        weather_lat=lat,
+        weather_lon=lon,
+        execute_actions=execute,
+        dry_run=dry_run,
+    )
+
+    return jsonify({
+        "success": True,
+        "data": {
+            "risk_level": result.risk_level,
+            "predictions": [
+                {
+                    "event_type": p.event_type,
+                    "confidence": p.confidence,
+                    "time_to_event_min": p.time_to_event_min,
+                    "description": p.description,
+                }
+                for p in result.predictions
+            ],
+            "recommended_actions": [a.id for a in result.recommended_actions],
+            "explanation": result.explanation,
+            "timestamp": result.timestamp,
+        }
+    })
+
 
 @app.post("/api/v1/quartz/predict")
 def quartz_predict():
@@ -890,7 +1334,9 @@ if __name__ == "__main__":
     log.info(f"   IBM Qiskit:  {'✓' if IBM_AVAILABLE else '✗ (pip install qiskit-ibm-runtime)'}")
     log.info(f"   Microsoft Q#: {'✓' if QSHARP_AVAILABLE else '✗ (pip install qsharp)'}")
     log.info(f"   WebSocket:   ✓ Habilitado")
-    log.info(f"   LRU Cache:   ✓ Habilitado (1024 entradas)")
+    log.info(f"   Climate Orchestrator: ✓ Habilitado")
+    log.info(f"   OpenWeather: {'✓' if config.openweather_api_key else '✗ (OPENWEATHER_API_KEY required)'}")
+    log.info(f"   LRU Cache:  ✓ Habilitado (1024 entradas)")
     log.info(f"   Misión: Nunca más apagones en Mexicali")
 
     socketio.run(app, host="0.0.0.0", port=port, debug=debug, allow_unsafe_werkzeug=True)

@@ -44,6 +44,33 @@ Compatible con simulaciones de:
 
 ---
 
+### Idiomas Soportados
+
+QuantumEnergyOS V.02 incluye soporte completo de internacionalización (i18n):
+
+| Idioma | Código | Estado | Ubicación en UI |
+|--------|--------|--------|----------------|
+| 🇲🇽 Español (México) | `es-MX` | ✅ **Principal** | Tablero, Config, Cuarzo 4D |
+| 🇬🇧 English (US) | `en` | ✅ Completo | Dashboard, Settings, Quartz 4D |
+
+#### Agregar un nuevo idioma
+
+1. Crear archivo `public/locales/{lang-code}/common.json`
+2. Traducir todas las claves desde `en/common.json` o `es/common.json`
+3. Agregar el idioma al selector en App.tsx:
+
+```typescript
+languages: [
+  { code: 'es', name: 'Español', flag: '🇲🇽' },
+  { code: 'en', name: 'English', flag: '🇺🇸' },
+  { code: 'fr', name: 'Français', flag: '🇫🇷' },  // Nuevo idioma
+]
+```
+
+4. Reiniciar la aplicación para cargar las traducciones.
+
+---
+
 ### Características Técnicas
 
 - **Algoritmos Cuánticos**: QAOA, VQE y simulaciones Qiskit/Q#

@@ -6,7 +6,8 @@
 import { useState, useEffect } from "react";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Zap, Grid, Atom, Sun, Settings } from "lucide-react";
+import { Zap, Grid, Atom, Sun, Settings, Globe } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 // Screens
 import DashboardScreen   from "./screens/Dashboard";
@@ -18,22 +19,27 @@ import SettingsScreen    from "./screens/SettingsScreen";
 // Store global
 import { useAppStore }   from "./store/appStore";
 
+// Hooks
+import { useLanguage } from "./hooks/useLanguage";
+
 // Tauri plugins
 import { isPermissionGranted, requestPermission, sendNotification }
     from "@tauri-apps/plugin-notification";
 
 const NAV_ITEMS = [
-  { path: "/",        icon: Zap,      label: "Dashboard" },
-  { path: "/grid",    icon: Grid,     label: "Red"       },
-  { path: "/quartz",  icon: Atom,     label: "Cuarzo 4D" },
-  { path: "/solar",   icon: Sun,      label: "Solar"     },
-  { path: "/settings",icon: Settings, label: "Config"   },
+  { path: "/",        icon: Zap,      label: "navigation.dashboard" },
+  { path: "/grid",    icon: Grid,     label: "navigation.grid"      },
+  { path: "/quartz",  icon: Atom,     label: "navigation.quartz"    },
+  { path: "/solar",   icon: Sun,      label: "navigation.solar"     },
+  { path: "/settings",icon: Settings, label: "navigation.settings"  },
 ];
 
 export default function App() {
   const navigate    = useNavigate();
   const location    = useLocation();
   const { init, solarRisk } = useAppStore();
+  const { t } = useTranslation("common");
+  const { currentLanguage, changeLanguage, languages } = useLanguage();
 
   // Inicializar al montar
   useEffect(() => {
@@ -44,13 +50,35 @@ export default function App() {
   // Notificación cuando hay riesgo solar alto
   useEffect(() => {
     if (solarRisk === "HIGH" || solarRisk === "EXTREME") {
-      notifyUser("⚠️ Alerta Solar",
-        `Tormenta solar ${solarRisk.toLowerCase()} detectada. Red en riesgo.`);
+      notifyUser(t("common.solarAlert", "⚠️ Alerta Solar"),
+        t("common.solarAlertBody", `Tormenta solar ${solarRisk.toLowerCase()} detectada. Red en riesgo.`));
     }
-  }, [solarRisk]);
+  }, [solarRisk, t]);
 
   return (
     <div className="app-shell">
+      {/* Header con selector de idioma */}
+      <header className="app-header">
+        <div className="header-title">
+          <h1>💎 QuantumEnergyOS</h1>
+          <p>Nunca más apagones en Mexicali</p>
+        </div>
+        <div className="language-selector-container">
+          <select
+            value={currentLanguage}
+            onChange={(e) => changeLanguage(e.target.value)}
+            className="language-select"
+            aria-label="Select language"
+          >
+            {languages.map((lang) => (
+              <option key={lang.code} value={lang.code}>
+                {lang.flag} {lang.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </header>
+
       {/* Área de contenido — scroll vertical */}
       <main className="screen-area">
         <AnimatePresence mode="wait">
@@ -73,9 +101,10 @@ export default function App() {
               key={path}
               className={`nav-item ${active ? "active" : ""}`}
               onClick={() => navigate(path)}
+              aria-label={t(label)}
             >
               <Icon size={22} strokeWidth={active ? 2.5 : 1.8} />
-              <span className="nav-label">{label}</span>
+              <span className="nav-label">{t(label)}</span>
             </button>
           );
         })}
