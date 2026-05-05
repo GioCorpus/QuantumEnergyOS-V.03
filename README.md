@@ -231,7 +231,7 @@ It uses quantum algorithms (QAOA and VQE) to optimize the electrical grid load b
 | ⚛️ **Kernel fotónico** | MZI mesh + homodyne + corrección GKP, latencia <1 ms |
 | 💎 **Cuarzo 4D** | Almacenamiento holográfico con 4 capas topológicas |
 | 🧬 **VQE Molecular** | H₂, H₂O, H₂O₂ — catálisis para energía limpia |
-| 🔐 **Seguridad cuántica** | 0 CVEs · bandit · semgrep · pip-audit · SBOM CycloneDX |
+| 🔐 **Criptografía cuántica** | QKD BB84, E91 · Kyber + Dilithium PQC · Canales seguros nodos |
 | 📱 **App móvil Tauri** | iOS + Android, offline-first SQLite, notificaciones solares |
 | 🌐 **Multiplataforma** | Linux · macOS M1/M2/M3/M4 · Windows 10/11/12 · Docker · ISO |
 | 🔬 **IBM Qiskit** | Hardware real IBM Quantum + Aer simulador |
@@ -246,9 +246,9 @@ It uses quantum algorithms (QAOA and VQE) to optimize the electrical grid load b
 Kernel      : Arch Linux + kernel custom fotónico (Rust #![no_std])
 Bootloader  : GRUB personalizado (UEFI + Legacy BIOS)
 Desktop     : Wayland (tinywl/Sway) + partículas cuánticas azules
-Rust        : Kernel · PhotonicQ Bridge · Scheduler · qcall API
-Python      : Flask API · Qiskit · Scripts de simulación
-Q#          : BalancearRed · FusionSim · BraidingDebug · Cooling
+Rust        : Kernel · PhotonicQ Bridge · Scheduler · qcall API · QKD Bridge
+Python      : Flask API · Qiskit · Scripts de simulación · quantum_crypto.py
+Q#          : BalancearRed · FusionSim · BraidingDebug · Cooling · QuantumCryptography
 IBM Qiskit  : qiskit 1.4.2 · qiskit-aer 0.16.0 · qiskit-ibm-runtime
 Dashboard   : React 18 + TypeScript + Recharts + Framer Motion
 Mobile      : Tauri 2.0 + React Native (iOS + Android)
@@ -527,6 +527,7 @@ QuantumEnergyOS/
 | ISO Arch Linux | ✅ Completo | Alta |
 | CI/CD 10 plataformas | ✅ Completo | Media |
 | Seguridad (0 CVEs) | ✅ Completo | Alta |
+| **Quantum Cryptography (BB84, QKD, PQC)** | ✅ **Recién agregado** | **Crítica** |
 | Azure Deployment | ✅ Completo | Baja |
 | Majorana braiding real | 🔬 Roadmap 2026-27 | Futura |
 | Hardware fotónico real | 🔬 Roadmap 2027 | Futura |
@@ -598,6 +599,7 @@ Lee [CONTRIBUTING.md](CONTRIBUTING.md) para las reglas de contribución.
 
 - 🔬 Algoritmos Q# mejorados (VQE, QAOA variantes)
 - 🐍 Integración con más backends de Qiskit (IonQ, Quantinuum)
+- 🔐 Criptografía cuántica (E91, B92, integración hardware fotónico)
 - 🌐 Traducción al inglés del dashboard
 - 🧪 Tests de integración con hardware real
 - 📚 Documentación de la arquitectura fotónica

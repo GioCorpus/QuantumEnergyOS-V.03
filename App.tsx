@@ -6,7 +6,7 @@
 import { useState, useEffect } from "react";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Zap, Grid, Atom, Sun, Settings, Globe } from "lucide-react";
+import { Zap, Grid, Atom, Sun, Settings, Globe, Shield } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 // Screens
@@ -15,6 +15,7 @@ import GridScreen        from "./screens/GridBalance";
 import Quartz4DScreen    from "./screens/Quartz4D";
 import SolarScreen       from "./screens/Solar";
 import SettingsScreen    from "./screens/SettingsScreen";
+import QuantumCryptoScreen from "./screens/QuantumCrypto";
 
 // Store global
 import { useAppStore }   from "./store/appStore";
@@ -30,6 +31,7 @@ const NAV_ITEMS = [
   { path: "/",        icon: Zap,      label: "navigation.dashboard" },
   { path: "/grid",    icon: Grid,     label: "navigation.grid"      },
   { path: "/quartz",  icon: Atom,     label: "navigation.quartz"    },
+  { path: "/crypto",  icon: Shield,   label: "navigation.crypto"    },
   { path: "/solar",   icon: Sun,      label: "navigation.solar"     },
   { path: "/settings",icon: Settings, label: "navigation.settings"  },
 ];
@@ -86,6 +88,7 @@ export default function App() {
             <Route path="/"        element={<PageWrapper><DashboardScreen /></PageWrapper>} />
             <Route path="/grid"    element={<PageWrapper><GridScreen /></PageWrapper>} />
             <Route path="/quartz"  element={<PageWrapper><Quartz4DScreen /></PageWrapper>} />
+            <Route path="/crypto"  element={<PageWrapper><QuantumCryptoScreen /></PageWrapper>} />
             <Route path="/solar"   element={<PageWrapper><SolarScreen /></PageWrapper>} />
             <Route path="/settings"element={<PageWrapper><SettingsScreen /></PageWrapper>} />
           </Routes>

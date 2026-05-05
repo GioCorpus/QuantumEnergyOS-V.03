@@ -8,6 +8,7 @@
     "dashboard": "Dashboard",
     "grid": "Grid",
     "quartz": "Quartz 4D",
+    "crypto": "Quantum Crypto",
     "solar": "Solar",
     "settings": "Settings"
   },
@@ -17,6 +18,22 @@
     "peakDemand": "Peak Demand",
     "maxTemperature": "Max Temperature",
     "consumptionByHour": "Hourly Consumption"
+  },
+  "crypto": {
+    "title": "Quantum Cryptography",
+    "subtitle": "Protected by quantum physics - Never more blackouts in Mexicali",
+    "status": "Operational",
+    "activeSessions": "Active Sessions",
+    "keysGenerated": "Keys Generated",
+    "securityLevel": "Security Level",
+    "lastAttack": "Last Attack",
+    "noAttacks": "No attack detected",
+    "qberHistory": "QBER History (Quantum Bit Error Rate)",
+    "keyVisualization": "Key Visualization",
+    "keyFormat": "Format: 1 = |1⟩ (vertical), 0 = |0⟩ (horizontal)",
+    "recentSessions": "Recent Sessions",
+    "runTest": "Run BB84 Test",
+    "running": "Running BB84..."
   },
   "grid": {
     "title": "Grid Balance - Mexicali",

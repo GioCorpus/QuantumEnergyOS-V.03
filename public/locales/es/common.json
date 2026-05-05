@@ -8,6 +8,7 @@
     "dashboard": "Tablero",
     "grid": "Red",
     "quartz": "Cuarzo 4D",
+    "crypto": "Cripto Cuántica",
     "solar": "Solar",
     "settings": "Config"
   },
@@ -17,6 +18,22 @@
     "peakDemand": "Demanda Pico",
     "maxTemperature": "Temperatura Máxima",
     "consumptionByHour": "Consumo por hora"
+  },
+  "crypto": {
+    "title": "Criptografía Cuántica",
+    "subtitle": "Protegido por física cuántica - Nunca más apagones en Mexicali",
+    "status": "Operacional",
+    "activeSessions": "Sesiones Activas",
+    "keysGenerated": "Claves Generadas",
+    "securityLevel": "Nivel de Seguridad",
+    "lastAttack": "Último Ataque",
+    "noAttacks": "Ningún ataque detectado",
+    "qberHistory": "Historial QBER (Quantum Bit Error Rate)",
+    "keyVisualization": "Visualización de Clave",
+    "keyFormat": "Formato: 1 = |1⟩ (vertical), 0 = |0⟩ (horizontal)",
+    "recentSessions": "Sesiones Recientes",
+    "runTest": "Ejecutar Test BB84",
+    "running": "Ejecutando BB84..."
   },
   "grid": {
     "title": "Balance de Red - Mexicali",
