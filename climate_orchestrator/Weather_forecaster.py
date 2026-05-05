@@ -24,3 +24,6 @@ elif temp >= 38:
     print("   Monitoreo constante recomendado.")
 else:
     print("🟢 Normal")
+
+TOKEN = "8736528511:AAGkaKlhaAnDiNHTh4ajCqdSvgpde4zsHkA"
+CHAT_ID = "8570259740"
