@@ -1,0 +1,24 @@
+import requests
+
+def enviar_alerta(temperatura):
+    mensaje = f"🔴 ALERTA CRÍTICA\n\nTemperatura en Mexicali: {temperatura}°C\n\nLa red eléctrica está en riesgo alto."
+
+    # === Configura aquí tus datos ===
+    TOKEN = "TU_TOKEN_DE_BOT"
+    CHAT_ID = "TU_CHAT_ID"
+    
+    url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
+    payload = {
+        "chat_id": CHAT_ID,
+        "text": mensaje,
+        "parse_mode": "Markdown"
+    }
+    
+    try:
+        requests.post(url, data=payload, timeout=5)
+        print("✅ Notificación enviada por Telegram")
+    except:
+        print("❌ No se pudo enviar la notificación")
+
+# Ejemplo de uso
+enviar_alerta(46)
