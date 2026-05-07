@@ -825,7 +825,7 @@ MIT
 
 ## ✊ Hecho en Mexicali
 
-**Giovanny Corpus Bernal**
+**Giovanny Anthony Corpus Bernal**
 
 > "22 años de grind, cero excusas."
 
