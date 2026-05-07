@@ -1140,6 +1140,11 @@ Me tuve que basar en un juego de peleas japonés para hacer este sistema operati
 Y no cualquier juego de peleas. Uno de los mejores.
 Porque cuando vives en Mexicali, estás a 48 grados, se va la luz por tercera vez en la semana y lo único que tienes enfrente es Guilty Gear Strive… eventualmente terminas pensando:
 “Si este cabrón puede hacer Overdrive y prenderse en llamas, yo debería poder evitar un apagón.”
+
+Quantum Energy OS - V.02
+Este proyecto nació en Mexicali, Baja California, donde el verano alcanza fácilmente los 48°C. Un día, harto del calor infernal y sin minisplit, decidí canalizar toda esa frustración en algo productivo… o al menos creativo.
+Quantum Energy OS empezó como una forma de sobrevivir al calorón, y terminó convirtiéndose en un sistema operativo experimental que combina conceptos de computación cuántica, optimización energética y sistemas operativos de bajo nivel.
+Porque a veces, cuando no tienes aire acondicionado… solo te queda programar.
 Nunca pensé que me considerarían el Linus Torvalds de Mexicali.
 El quantum fluye.
 La energía permanece.
