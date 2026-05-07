@@ -1,91 +1,96 @@
-# 🛠️ Guía de Contribución — QuantumEnergyOS
+# Contribuir a QuantumEnergyOS
 
-¡Gracias por querer contribuir! Este proyecto existe para que la energía limpia llegue al noroeste de México y al mundo. Cada PR cuenta.
+¡Gracias por considerar contribuir a **QuantumEnergyOS**!  
+Su participación es fundamental para avanzar en el desarrollo de la primera plataforma cuántica-fotónica dedicada a la optimización energética desde Mexicali, Baja California.
 
-## Antes de empezar
+---
 
-1. Lee el [Código de Conducta](CODE_OF_CONDUCT.md)
-2. Revisa los [Issues abiertos](https://github.com/GioCorpus/QuantumEnergyOS/issues)
-3. Para cambios grandes, abre un Issue primero para discutir
+## Código de Conducta
 
-## Setup local
+Este proyecto se rige por el [Código de Conducta](CODE_OF_CONDUCT.md). Esperamos que todos los participantes mantengan un ambiente respetuoso, inclusivo y profesional.
 
-```bash
-# 1. Fork + clonar
-git clone https://github.com/TU_USUARIO/QuantumEnergyOS.git
-cd QuantumEnergyOS
+---
 
-# 2. Entorno virtual
-python3 -m venv .venv
-source .venv/bin/activate        # Linux/Mac
-# .venv\Scripts\activate         # Windows
+## Cómo Contribuir
 
-# 3. Instalar dependencias
-pip install -r requirements-pinned.txt -r requirements-dev.txt
+### 1. Reportar un problema (Issues)
 
-# 4. Configurar secretos (nunca hardcodear)
-cp .env.example .env
-# Editar .env con tus tokens
+- Antes de crear un nuevo issue, verifique que no exista ya uno similar.
+- Utilice un título claro y descriptivo.
+- Incluya:
+  - Descripción detallada del problema o sugerencia.
+  - Pasos para reproducir el error (si aplica).
+  - Versión del sistema operativo y entorno utilizado.
+  - Capturas de pantalla o logs relevantes.
 
-# 5. Activar commits firmados
-git config commit.gpgsign true
-```
+### 2. Proponer cambios (Pull Requests)
 
-## Flujo de trabajo
+1. **Fork** el repositorio.
+2. Cree una rama con un nombre descriptivo:
+   ```bash
+   git checkout -b feature/qaoa-improvement
+   # o
+   git checkout -b bugfix/dashboard-translation
 
-```bash
-# Rama descriptiva
-git checkout -b feat/optimizar-qaoa-capas
+   Realice sus cambios siguiendo las convenciones del proyecto.
+Asegúrese de que las pruebas existentes sigan pasando (make test o pytest).
+Actualice la documentación si es necesario.
+Envíe un Pull Request con una descripción clara del cambio realizado.
 
-# Desarrollar + testear
-pytest tests/ -v
-bandit -r . --severity-level medium
-pip-audit -r requirements-pinned.txt
+3. Estándares de Código
 
-# Commit firmado
-git commit -S -m "feat(quantum): optimizar capas QAOA para redes de 8 nodos"
+Rust: Seguir las convenciones de rustfmt y clippy.
+Python: Cumplir con PEP 8 y utilizar ruff para linting.
+TypeScript/React: Seguir las reglas de ESLint y Prettier configuradas en el dashboard.
+Q#: Mantener un estilo limpio y bien comentado.
+Todos los commits deben tener mensajes claros y en inglés (preferentemente).
 
-# Push + PR hacia main
-git push origin feat/optimizar-qaoa-capas
-```
 
-## Reglas de seguridad para contribuidores
+Áreas donde más se necesita ayuda
+Actualmente buscamos contribuciones prioritarias en las siguientes áreas:
+🔬 Algoritmos Cuánticos
 
-| Regla | Detalle |
-|---|---|
-| **Nunca tokens en código** | Usar siempre `os.getenv("IBM_QUANTUM_TOKEN")` |
-| **MAX_QUBITS = 32** | No elevar este límite sin discusión en Issue |
-| **Validar inputs** | Todo input externo pasa por `security/validation.py` |
-| **Sin `.env` en git** | Está en `.gitignore` — usa `.env.example` |
-| **Tests obligatorios** | Todo nuevo código necesita tests en `tests/` |
+Mejora de algoritmos Q# (VQE, QAOA y sus variantes)
+Implementación de nuevas optimizaciones para balanceo de red eléctrica
+Algoritmos de corrección de errores (GKP, surface codes, etc.)
 
-## Convención de commits
+🐍 Integración con Hardware Cuántico
 
-```
-feat(scope):     nueva funcionalidad
-fix(scope):      corrección de bug
-fix(security):   parche de seguridad — prioridad máxima
-chore(deps):     actualización de dependencias
-docs:            solo documentación
-test:            solo tests
-refactor:        refactoring sin cambio de comportamiento
-```
+Soporte para más backends de Qiskit (IonQ, Quantinuum, Rigetti, etc.)
+Optimización de ejecución en simuladores y hardware real
+Manejo de sesiones y tokens de forma segura
 
-## Checklist antes de abrir PR
+🌐 Dashboard y Localización
 
-- [ ] Tests pasan: `pytest tests/ -v`
-- [ ] Sin vulnerabilidades: `pip-audit -r requirements-pinned.txt`
-- [ ] Sin problemas de seguridad: `bandit -r . --severity-level medium`
-- [ ] Sin errores de lint: `ruff check .`
-- [ ] Commit firmado con GPG
-- [ ] `requirements-pinned.txt` actualizado si se agregaron deps
-- [ ] Documentación actualizada si aplica
+Traducción completa al inglés del dashboard (alta prioridad)
+Mejoras en la interfaz React + TypeScript
+Optimización de rendimiento y accesibilidad
 
-## Áreas donde puedes contribuir
+🧪 Pruebas e Integración
 
-- 🔬 **Algoritmos Q#** — mejorar QAOA, VQE, simulación de fusión
-- 🐍 **Notebooks Python** — más visualizaciones, análisis de resultados
-- 🔐 **Seguridad** — auditorías, mejoras al sandbox
-- 📖 **Documentación** — ejemplos, tutoriales, traducciones
-- 🧪 **Tests** — más cobertura, tests de integración con Qiskit Aer
-- 🌐 **Demo web** — mejorar `index.html` y `api-simulada.js`
+Tests de integración con hardware cuántico real
+Pruebas de carga y estrés del sistema
+Validación de resultados contra simuladores clásicos de alta fidelidad
+
+📚 Documentación
+
+Documentación técnica detallada de la arquitectura fotónica
+Diagramas de flujo del PhotonicQ Bridge
+Guías de despliegue y configuración avanzada
+Documentación de la API qcall
+
+
+Configuración de Desarrollo
+Consulte la sección Desarrollo del README.md para instrucciones detalladas de instalación y configuración del entorno completo (Rust, Python, Q#, Node.js, etc.).
+
+Preguntas o Dudas
+
+Abra un issue con la etiqueta question o help-wanted.
+Puede contactar directamente al mantenedor a través de GitHub Discussions.
+
+
+Agradecimientos
+Toda contribución, por pequeña que sea, es valiosa. Los contribuyentes aparecerán en la sección de Agradecimientos del README.
+
+QuantumEnergyOS — Llevando computación cuántica aplicada desde el desierto de Mexicali al mundo.
+Gracias por formar parte de esta misión.

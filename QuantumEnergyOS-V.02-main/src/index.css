@@ -1,0 +1,175 @@
+/* Language Selector Styles */
+.language-selector-container {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+}
+
+.language-select {
+  background: rgba(17, 24, 39, 0.8);
+  border: 1px solid #374151;
+  color: white;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+}
+
+.language-select:hover {
+  border-color: #60a5fa;
+}
+
+.language-select option {
+  background: #111827;
+  color: white;
+}
+
+/* App Header */
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 1rem;
+  background: rgba(17, 24, 39, 0.95);
+  border-bottom: 1px solid #1f2937;
+}
+
+.header-title h1 {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #22c55e;
+}
+
+.header-title p {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  margin-top: 0.25rem;
+}
+
+/* Screen content */
+.screen-content {
+  padding: 1rem;
+  min-height: calc(100vh - 8rem);
+}
+
+.screen-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.screen-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: white;
+}
+
+.screen-subtitle {
+  font-size: 0.875rem;
+  color: #9ca3af;
+}
+
+/* Bottom Navigation */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-around;
+  background: rgba(17, 24, 39, 0.95);
+  border-top: 1px solid #1f2937;
+  padding: 0.5rem;
+  backdrop-filter: blur(4px);
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem;
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.nav-item.active {
+  color: #60a5fa;
+}
+
+.nav-item:hover {
+  color: #e5e7eb;
+}
+
+.nav-label {
+  font-size: 0.625rem;
+  margin-top: 0.25rem;
+}
+
+/* Cards */
+.card {
+  background: rgba(31, 41, 55, 0.5);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid #374151;
+}
+
+.card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+/* Stats */
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.stat-label {
+  color: #9ca3af;
+  font-size: 0.875rem;
+}
+
+.stat-value {
+  color: white;
+  font-weight: 500;
+}
+
+/* Buttons */
+.btn {
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.btn-primary {
+  background: #3b82f6;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #2563eb;
+}
+
+.btn-secondary {
+  background: #4b5563;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: #374151;
+}
+
+.full-width {
+  width: 100%;
+}

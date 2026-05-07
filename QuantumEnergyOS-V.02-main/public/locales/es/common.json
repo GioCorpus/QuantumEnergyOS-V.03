@@ -1,0 +1,86 @@
+{
+  "app": {
+    "title": "QuantumEnergyOS",
+    "subtitle": "Gestión Energética Impulsada por Cuántica",
+    "mission": "Nunca más apagones en Mexicali"
+  },
+  "navigation": {
+    "dashboard": "Tablero",
+    "grid": "Red",
+    "quartz": "Cuarzo 4D",
+    "crypto": "Cripto Cuántica",
+    "solar": "Solar",
+    "settings": "Config"
+  },
+  "dashboard": {
+    "title": "Red Eléctrica de Mexicali",
+    "currentTemp": "Temperatura actual: {{temp}}°C",
+    "peakDemand": "Demanda Pico",
+    "maxTemperature": "Temperatura Máxima",
+    "consumptionByHour": "Consumo por hora"
+  },
+  "crypto": {
+    "title": "Criptografía Cuántica",
+    "subtitle": "Protegido por física cuántica - Nunca más apagones en Mexicali",
+    "status": "Operacional",
+    "activeSessions": "Sesiones Activas",
+    "keysGenerated": "Claves Generadas",
+    "securityLevel": "Nivel de Seguridad",
+    "lastAttack": "Último Ataque",
+    "noAttacks": "Ningún ataque detectado",
+    "qberHistory": "Historial QBER (Quantum Bit Error Rate)",
+    "keyVisualization": "Visualización de Clave",
+    "keyFormat": "Formato: 1 = |1⟩ (vertical), 0 = |0⟩ (horizontal)",
+    "recentSessions": "Sesiones Recientes",
+    "runTest": "Ejecutar Test BB84",
+    "running": "Ejecutando BB84..."
+  },
+  "grid": {
+    "title": "Balance de Red - Mexicali",
+    "subtitle": "QuantumEnergyOS • Monitoreo en tiempo real",
+    "copperState": "Estado del Cobre",
+    "temperature": "Temperatura promedio de líneas",
+    "heatLoss": "Pérdidas por calor",
+    "heatLossDesc": "de energía se pierde como calor en el cobre",
+    "note": "El cobre es el corazón de la red. A más de 85°C, las pérdidas aumentan drásticamente."
+  },
+  "quartz4d": {
+    "title": "Cuarzo 4D",
+    "subtitle": "Almacenamiento holográfico topológico",
+    "layers": {
+      "physical": "Física",
+      "physicalDesc": "Qubits Majorana en nanowires",
+      "topological": "Topológica",
+      "topologicalDesc": "Braiding protegido topológicamente",
+      "holographic": "Holográfica",
+      "holographicDesc": "Almacenamiento en cuarzo 4D",
+      "energy": "Energética",
+      "energyDesc": "Red eléctrica + fusión D-T"
+    },
+    "prediction": "Predicción Cuántica",
+    "hoursAhead": "Horas hacia adelante: {{hours}}h",
+    "calculate": "Predecir",
+    "calculating": "Calculando...",
+    "saveToQuartz": "Guardar en Cuarzo 4D",
+    "coherenceTime": "Tiempo de coherencia",
+    "stats": {
+      "amplitude": "Amplitud",
+      "phase": "Fase",
+      "entanglement": "Entrelazamiento",
+      "active": "Activa",
+      "inactive": "Inactiva",
+      "gridEfficiency": "Eficiencia de red",
+      "topologicalProtection": "Protección topológica",
+      "braidOps": "Operaciones braid"
+    }
+  },
+  "common": {
+    "loading": "Cargando...",
+    "error": "Error",
+    "retry": "Reintentar",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "ok": "OK",
+    "close": "Cerrar"
+  }
+}
