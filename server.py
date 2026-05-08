@@ -1138,6 +1138,36 @@ if __name__ == "__main__":
     log.info(f"   Misión: Nunca más apagones en Mexicali")
 
     # Iniciar monitor climático en background si está habilitado
+
+    @app.post("/api/v1/quartz4d/write")
+def quartz_write():
+    data = request.get_json()
+    x = int(data.get("x", 0))
+    y = int(data.get("y", 0))
+    z = int(data.get("z", 0))
+    t = int(data.get("t", 0))
+    payload = data.get("data", "QuantumEnergyOS V.02 - Never more blackouts").encode()
+    
+    success = quartz_4d.write(x, y, z, t, payload)
+    return jsonify({"success": success, "position": f"({x},{y},{z},{t})"})
+
+@app.get("/api/v1/quartz4d/read")
+def quartz_read():
+    x = int(request.args.get("x", 0))
+    y = int(request.args.get("y", 0))
+    z = int(request.args.get("z", 0))
+    t = int(request.args.get("t", 0))
+    
+    data = quartz_4d.read(x, y, z, t)
+    return jsonify({
+        "data": data.decode() if data else None,
+        "position": f"({x},{y},{z},{t})",
+        "exists": data is not None
+    })
+
+@app.get("/api/v1/quartz4d/stats")
+def quartz_stats():
+    return jsonify(quartz_4d.get_stats())
     if CLIMATE_MONITOR_ENABLED:
         start_climate_monitor()
 
