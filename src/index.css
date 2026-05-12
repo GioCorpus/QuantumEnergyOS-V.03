@@ -170,6 +170,20 @@
   background: #374151;
 }
 
+/* Notification Sidebar */
+.notification-sidebar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  z-index: 50;
+}
+
+/* Ensure sidebar appears above bottom nav */
+.bottom-nav {
+  z-index: 30;
+}
+
 .full-width {
   width: 100%;
 }
