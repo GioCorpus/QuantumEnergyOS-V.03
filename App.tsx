@@ -17,6 +17,9 @@ import SolarScreen       from "./screens/Solar";
 import SettingsScreen    from "./screens/SettingsScreen";
 import QuantumCryptoScreen from "./screens/QuantumCrypto";
 
+// Notification Sidebar
+import { NotificationSidebar } from "./components/NotificationSidebar";
+
 // Store global
 import { useAppStore }   from "./store/appStore";
 
@@ -81,9 +84,10 @@ export default function App() {
         </div>
       </header>
 
-      {/* Área de contenido — scroll vertical */}
-      <main className="screen-area">
-        <AnimatePresence mode="wait">
+{/* Área de contenido — scroll vertical */}
+       <main className="screen-area">
+         <NotificationSidebar />
+         <AnimatePresence mode="wait">
           <Routes location={location} key={location.pathname}>
             <Route path="/"        element={<PageWrapper><DashboardScreen /></PageWrapper>} />
             <Route path="/grid"    element={<PageWrapper><GridScreen /></PageWrapper>} />
