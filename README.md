@@ -1142,7 +1142,7 @@ Porque cuando vives en Mexicali, estás a 48 grados, se va la luz por tercera ve
 “Si este cabrón puede hacer Overdrive y prenderse en llamas, yo debería poder evitar un apagón.”
 
 Quantum Energy OS - V.02
-Este proyecto nació en Mexicali, Baja California, donde el verano alcanza fácilmente los 48°C. Un día, harto del calor infernal y sin minisplit, decidí canalizar toda esa frustración en algo productivo… o al menos creativo.
+Este proyecto nació en Mexicali, Baja California, donde el verano alcanza fácilmente los 48°C. Un día, harto del calor infernal y sin minisplit, decidí canalizar toda esa frustración en algo productivo… o al menos creativo y donde jamas hubiera tenido una multa ante la Comision Federal de Electricidad (La CFE) este proceso jamas hubiera comenzado.
 Quantum Energy OS empezó como una forma de sobrevivir al calorón, y terminó convirtiéndose en un sistema operativo experimental que combina conceptos de computación cuántica, optimización energética y sistemas operativos de bajo nivel.
 Porque a veces, cuando no tienes aire acondicionado… solo te queda programar.
 Nunca pensé que me considerarían el Linus Torvalds de Mexicali.
