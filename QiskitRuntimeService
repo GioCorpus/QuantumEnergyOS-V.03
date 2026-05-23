@@ -1,0 +1,12 @@
+from qiskit_ibm_runtime import QiskitRuntimeService
+
+# Save your token to your local disk (run this once)
+QiskitRuntimeService.save_account(token="<{
+  "name": "QuantumEnergyOS",
+  "description": "IBM Quantum API key",
+  "createdAt": "2026-05-23T01:57+0000",
+  "apikey": "2KO1qkrTlsi8v1dh1cPoxKEvnnq1YFTcVagTIVvw3g4r"
+}>")
+
+# Load the service in your scripts
+service = QiskitRuntimeService()
