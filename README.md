@@ -32,7 +32,7 @@
 > *"Porque en el desierto, donde el calor quema y el viento no para,
 > la energía debería ser justa."*
 >
-> — Giovanny Corpus Bernal, Mexicali, BC
+> — Giovanny Anthony Corpus Bernal, Mexicali, BC
 
 </div>
 
