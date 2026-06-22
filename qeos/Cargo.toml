@@ -1,0 +1,45 @@
+[workspace]
+resolver = "2"
+members = [
+    "daemons/quantumd",
+    "daemons/energyd",
+    "daemons/climated",
+    "daemons/photonicd",
+    "daemons/aicored",
+    "libs/qeos-common",
+    "libs/qeos-quantum",
+    "libs/qeos-energy",
+    "libs/qeos-climate",
+    "libs/qeos-photonic",
+    "cores/kernel",
+    "tests",
+]
+
+[workspace.dependencies]
+tokio = { version = "1.43", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+clap = { version = "4.5", features = ["derive"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-appender = "0.2"
+uuid = { version = "1.7", features = ["v4"] }
+reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
+thiserror = "2.0"
+config = "0.14"
+axum = "0.8"
+metrics = "0.24"
+redis = { version = "0.27", features = ["tokio-comp", "connection-manager"] }
+postgres = { version = "0.19", features = ["with-uuid-1_7", "with-chrono-0_4"] }
+sqlx = { version = "0.8", features = ["runtime-tokio-native-tls", "postgres", "uuid", "chrono", "json"] }
+rdkafka = { version = "0.37", features = ["tokio"] }
+numpy = "0.23"
+ndarray = "0.16"
+qoqo_calculator_pyo3 = "1.13"
+qoqo_mock = "1.13"
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

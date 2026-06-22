@@ -1,0 +1,27 @@
+[package]
+name = "qeos-tests"
+version = "0.1.0"
+edition = "2021"
+
+[[test]]
+name = "quantumd_smoke"
+path = "integration/quantumd_smoke.rs"
+
+[[test]]
+name = "energyd_smoke"
+path = "integration/energyd_smoke.rs"
+
+[[test]]
+name = "climated_smoke"
+path = "integration/climated_smoke.rs"
+
+[dependencies]
+qeos-common = { path = "../libs/qeos-common" }
+quantumd = { path = "../daemons/quantumd" }
+energyd = { path = "../daemons/energyd" }
+climated = { path = "../daemons/climated" }
+tokio = { workspace = true }
+tokio-test = "0.4"
+
+[dev-dependencies]
+qeos-common = { path = "../libs/qeos-common" }

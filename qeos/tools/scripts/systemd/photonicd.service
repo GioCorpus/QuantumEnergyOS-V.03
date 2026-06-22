@@ -1,0 +1,18 @@
+[Unit]
+Description=QuantumEnergyOS Photonic Daemon
+Documentation=man:photonicd(8)
+After=network.target
+
+[Service]
+Type=simple
+User=qeos
+Group=qeos
+ExecStart=/usr/bin/photonicd
+Restart=on-failure
+RestartSec=5s
+LimitNOFILE=65536
+Environment=RUST_LOG=info
+Environment=RUST_BACKTRACE=1
+
+[Install]
+WantedBy=multi-user.target

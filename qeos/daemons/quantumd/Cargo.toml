@@ -1,0 +1,26 @@
+[package]
+name = "quantumd"
+version = "0.3.0"
+edition = "2021"
+description = "QuantumEnergyOS Quantum Daemon - quantum computing and simulation service"
+repository = "https://github.com/GiovannyCorpus/QuantumEnergyOS"
+license = "MIT"
+
+[dependencies]
+qeos-common = { path = "../../libs/qeos-common" }
+tokio = { version = "1.43", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+axum = "0.8"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+clap = { version = "4.5", features = ["derive"] }
+uuid = { version = "1.7", features = ["v4"] }
+thiserror = "2.0"
+redis = { version = "0.27", features = ["tokio-comp", "connection-manager"] }
+postgres = { version = "0.19", features = ["with-uuid-1_7", "with-chrono-0_4"] }
+metrics = "0.24"
+numpy = "0.23"
+ndarray = "0.16"
+qoqo-calculator-pyo3 = "1.13"
+qoqo-mock = "1.13"

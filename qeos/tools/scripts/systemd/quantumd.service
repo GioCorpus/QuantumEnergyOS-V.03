@@ -1,0 +1,19 @@
+[Unit]
+Description=QuantumEnergyOS Quantum Daemon
+Documentation=man:quantumd(8)
+After=network.target postgresql.service redis.service
+Wants=postgresql.service redis.service
+
+[Service]
+Type=simple
+User=qeos
+Group=qeos
+ExecStart=/usr/bin/quantumd
+Restart=on-failure
+RestartSec=5s
+LimitNOFILE=65536
+Environment=RUST_LOG=info
+Environment=RUST_BACKTRACE=1
+
+[Install]
+WantedBy=multi-user.target

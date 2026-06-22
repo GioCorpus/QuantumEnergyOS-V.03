@@ -1,0 +1,11 @@
+[package]
+name = "qeos-energy"
+version = "0.3.0"
+edition = "2021"
+description = "QuantumEnergyOS energy modeling and optimization library"
+
+[dependencies]
+qeos-common = { path = "../qeos-common" }
+ndarray = "0.16"
+serde = { version = "1.0", features = ["derive"] }
+thiserror = "2.0"

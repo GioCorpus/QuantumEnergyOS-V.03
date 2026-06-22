@@ -1,0 +1,10 @@
+[package]
+name = "universe-simulator"
+version = "0.1.0"
+edition = "2021"
+authors = ["Giovanny Anthony Corpus Bernal <github.com/GioCorpus>"]
+description = "Simulador cosmológico autónomo del universo — QuantumEnergyOS V.02"
+license = "MIT"
+
+[dependencies]
+libm = "0.2"
