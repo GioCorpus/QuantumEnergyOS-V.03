@@ -1,5 +1,5 @@
 use super::frame::EnergyTelemetryFrame;
-use super::spsc::{SpScRingBuffer, RingBufferError};
+use super::spsc::{RingBufferError, SpScRingBuffer};
 
 pub const TELEMETRY_IRQ: u8 = 42;
 pub const DMA_BUFFER_SIZE: usize = 1024;
@@ -18,10 +18,14 @@ impl<const N: usize> TelemetryDriver<N> {
     }
 
     #[inline]
-    pub unsafe fn handle_irq(&mut self, sensor_id: u32, power_w: f32, voltage_v: f32) -> Result<(), RingBufferError> {
-        let frame = EnergyTelemetryFrame::new(sensor_id)
-            .with_measurements(power_w, voltage_v, 0.0);
-        
+    pub unsafe fn handle_irq(
+        &mut self,
+        sensor_id: u32,
+        power_w: f32,
+        voltage_v: f32,
+    ) -> Result<(), RingBufferError> {
+        let frame = EnergyTelemetryFrame::new(sensor_id).with_measurements(power_w, voltage_v, 0.0);
+
         self.ring_buffer.push(frame)
     }
 
@@ -47,7 +51,7 @@ pub struct DmaBuffer {
 impl DmaBuffer {
     pub fn new(len: usize) -> Self {
         let aligned_len = (len + 63) & !63;
-        
+
         Self {
             ptr: core::ptr::null_mut(),
             len: aligned_len,

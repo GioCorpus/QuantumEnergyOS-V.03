@@ -1,5 +1,5 @@
 use super::frame::EnergyTelemetryFrame;
-use super::spsc::{SpScRingBuffer, RingBufferError};
+use super::spsc::{RingBufferError, SpScRingBuffer};
 
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -21,14 +21,14 @@ impl BackpressurePolicy {
         BackpressureMode::RealTime
     }
 
-    pub fn on_overflow<const N: usize>(&self, buffer: &mut SpScRingBufferWrapper<N>, frame: EnergyTelemetryFrame) -> Result<(), RingBufferError> {
+    pub fn on_overflow<const N: usize>(
+        &self,
+        buffer: &mut SpScRingBufferWrapper<N>,
+        frame: EnergyTelemetryFrame,
+    ) -> Result<(), RingBufferError> {
         match self {
-            Self::RealTime { overwrite: true } => {
-                unsafe { buffer.force_push(frame) }
-            }
-            Self::Scientific { .. } => {
-                Err(RingBufferError::Overflow)
-            }
+            Self::RealTime { overwrite: true } => unsafe { buffer.force_push(frame) },
+            Self::Scientific { .. } => Err(RingBufferError::Overflow),
             Self::Emergency { polling_enabled } => {
                 if *polling_enabled {
                     unsafe { buffer.force_push(frame) }
@@ -45,11 +45,15 @@ impl BackpressurePolicy {
     }
 
     pub fn scientific() -> Self {
-        Self::Scientific { preserve_history: true }
+        Self::Scientific {
+            preserve_history: true,
+        }
     }
 
     pub fn emergency() -> Self {
-        Self::Emergency { polling_enabled: true }
+        Self::Emergency {
+            polling_enabled: true,
+        }
     }
 }
 
@@ -73,14 +77,18 @@ impl<const N: usize> SpScRingBufferWrapper<N> {
         unsafe { self.inner.pop() }
     }
 
-    pub unsafe fn force_push(&mut self, frame: EnergyTelemetryFrame) -> Result<(), RingBufferError> {
+    pub unsafe fn force_push(
+        &mut self,
+        frame: EnergyTelemetryFrame,
+    ) -> Result<(), RingBufferError> {
         let read_idx = self.inner.read_cursor();
         let write_idx = self.inner.write_cursor();
-        
+
         if write_idx.saturating_sub(read_idx) >= N {
-            self.inner.advance_read(write_idx.saturating_sub(N.saturating_sub(1)));
+            self.inner
+                .advance_read(write_idx.saturating_sub(N.saturating_sub(1)));
         }
-        
+
         self.inner.push(frame)
     }
 

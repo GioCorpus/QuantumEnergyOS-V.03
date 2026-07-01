@@ -1,5 +1,5 @@
-use core::sync::atomic::{AtomicUsize, Ordering};
 use super::frame::EnergyTelemetryFrame;
+use core::sync::atomic::{AtomicUsize, Ordering};
 
 pub const CACHE_LINE_SIZE: usize = 64;
 
@@ -28,8 +28,11 @@ impl<const N: usize> SpScRingBuffer<N> {
     }
 
     pub fn new() -> Self {
-        assert!(Self::is_power_of_two(N), "Ring buffer capacity must be power of two");
-        
+        assert!(
+            Self::is_power_of_two(N),
+            "Ring buffer capacity must be power of two"
+        );
+
         Self {
             buffer: core::array::from_fn(|_| EnergyTelemetryFrame::new(0)),
             producer: ProducerState {
@@ -53,16 +56,16 @@ impl<const N: usize> SpScRingBuffer<N> {
     pub unsafe fn push(&mut self, frame: EnergyTelemetryFrame) -> Result<(), RingBufferError> {
         let write_idx = self.producer.cursor.load(Ordering::Relaxed);
         let read_idx = self.consumer.cursor.load(Ordering::Acquire);
-        
+
         let available = N - (write_idx - read_idx);
-        
+
         if available == 0 {
             return Err(RingBufferError::Overflow);
         }
-        
+
         self.buffer[write_idx & self.capacity_mask] = frame;
         self.producer.cursor.store(write_idx + 1, Ordering::Release);
-        
+
         Ok(())
     }
 
@@ -70,15 +73,15 @@ impl<const N: usize> SpScRingBuffer<N> {
     pub unsafe fn pop(&mut self) -> Option<EnergyTelemetryFrame> {
         let read_idx = self.consumer.cursor.load(Ordering::Relaxed);
         let write_idx = self.producer.cursor.load(Ordering::Acquire);
-        
+
         if read_idx == write_idx {
             return None;
         }
-        
+
         let frame = self.buffer[read_idx & self.capacity_mask];
         core::sync::atomic::fence(Ordering::AcqRel);
         self.consumer.cursor.store(read_idx + 1, Ordering::Release);
-        
+
         Some(frame)
     }
 
@@ -129,7 +132,7 @@ mod tests {
     fn push_pop_single_frame() {
         let mut rb: SpScRingBuffer<256> = SpScRingBuffer::new();
         let frame = EnergyTelemetryFrame::new(1);
-        
+
         unsafe {
             rb.push(frame).unwrap();
             let popped = rb.pop().unwrap();
