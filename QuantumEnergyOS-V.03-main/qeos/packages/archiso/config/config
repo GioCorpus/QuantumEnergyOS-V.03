@@ -1,0 +1,7 @@
+# config.toml - QuantumEnergyOS Arch ISO profile
+# See https://gitlab.archlinux.org/archlinux/archiso/-/blob/master/configs/baseline/configs/baseline
+
+ScriptOptions=(())
+
+# Defines the compression method used in mksquashfs, see man page of mksquashfs for a list
+COMPRESSION="xz"

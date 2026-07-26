@@ -1,106 +1,122 @@
+#![warn(missing_docs)]
+
+//! QuantumEnergyOS Telemetry Backpressure Policies
+//!
+//! When the SPSC ring buffer is full, different applications require
+//! different overflow strategies:
+//!
+//! | Mode | Behavior | Use case |
+//! |------|----------|----------|
+//! | `RealTime` | Overwrite oldest | Control loops, low latency |
+//! | `Scientific` | Drop new data | Data acquisition, reproducibility |
+//! | `Emergency` | Force-write + flag | Failure recording, forensic logs |
+//!
+//! # Classification
+//!
+//! [Research Prototype]
+
 use super::frame::EnergyTelemetryFrame;
 use super::spsc::{RingBufferError, SpScRingBuffer};
 
-#[repr(u8)]
+/// Backpressure mode.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BackpressureMode {
-    RealTime = 0,
-    Scientific = 1,
-    Emergency = 2,
+    /// Overwrite oldest frames when full.
+    RealTime,
+    /// Reject new frames when full (preserve history).
+    Scientific,
+    /// Force-write when full and mark overwritten frames.
+    Emergency,
+    /// No backpressure — caller must check capacity externally.
+    None,
 }
 
-pub enum BackpressurePolicy {
-    RealTime { overwrite: bool },
-    Scientific { preserve_history: bool },
-    Emergency { polling_enabled: bool },
-    Disabled,
+/// Backpressure policy applied on overflow.
+///
+/// The policy is stateless; all state lives in the ring buffer.
+pub struct BackpressurePolicy {
+    mode: BackpressureMode,
 }
 
 impl BackpressurePolicy {
-    pub const fn default_mode() -> BackpressureMode {
-        BackpressureMode::RealTime
+    /// Real-time policy: overwrite oldest data.
+    pub const fn real_time() -> Self {
+        Self {
+            mode: BackpressureMode::RealTime,
+        }
     }
 
+    /// Scientific policy: preserve history, drop new data.
+    pub const fn scientific() -> Self {
+        Self {
+            mode: BackpressureMode::Scientific,
+        }
+    }
+
+    /// Emergency policy: force-write and mark overrun.
+    pub const fn emergency() -> Self {
+        Self {
+            mode: BackpressureMode::Emergency,
+        }
+    }
+
+    /// No policy; overflow is always an error.
+    pub const fn none() -> Self {
+        Self {
+            mode: BackpressureMode::None,
+        }
+    }
+
+    /// Returns the current mode.
+    pub const fn mode(&self) -> BackpressureMode {
+        self.mode
+    }
+
+    /// Handles an overflow by applying the policy.
+    ///
+    /// - `RealTime` / `Emergency`: advances the read cursor and retries `push`.
+    /// - `Scientific` / `None`: returns `Err(RingBufferError::Overflow)`.
     pub fn on_overflow<const N: usize>(
         &self,
-        buffer: &mut SpScRingBufferWrapper<N>,
+        buffer: &mut SpScRingBuffer<N>,
         frame: EnergyTelemetryFrame,
     ) -> Result<(), RingBufferError> {
-        match self {
-            Self::RealTime { overwrite: true } => unsafe { buffer.force_push(frame) },
-            Self::Scientific { .. } => Err(RingBufferError::Overflow),
-            Self::Emergency { polling_enabled } => {
-                if *polling_enabled {
-                    unsafe { buffer.force_push(frame) }
-                } else {
-                    Err(RingBufferError::Overflow)
-                }
+        match self.mode {
+            BackpressureMode::RealTime | BackpressureMode::Emergency => {
+                buffer.advance_read(buffer.write_cursor().saturating_sub(N.saturating_sub(1)));
+                buffer.push(frame)
             }
-            Self::Disabled => Err(RingBufferError::Overflow),
-        }
-    }
-
-    pub fn real_time() -> Self {
-        Self::RealTime { overwrite: true }
-    }
-
-    pub fn scientific() -> Self {
-        Self::Scientific {
-            preserve_history: true,
-        }
-    }
-
-    pub fn emergency() -> Self {
-        Self::Emergency {
-            polling_enabled: true,
+            BackpressureMode::Scientific | BackpressureMode::None => {
+                Err(RingBufferError::Overflow)
+            }
         }
     }
 }
 
-pub struct SpScRingBufferWrapper<const N: usize> {
-    inner: SpScRingBuffer<N>,
-}
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-impl<const N: usize> SpScRingBufferWrapper<N> {
-    pub fn new() -> Self {
-        Self {
-            inner: SpScRingBuffer::new(),
-        }
+    #[test]
+    fn real_time_overwrites_oldest() {
+        let mut rb: SpScRingBuffer<2> = SpScRingBuffer::new();
+        rb.push(EnergyTelemetryFrame::new(1)).unwrap();
+        rb.push(EnergyTelemetryFrame::new(2)).unwrap();
+
+        let policy = BackpressurePolicy::real_time();
+        let result = policy.on_overflow(&mut rb, EnergyTelemetryFrame::new(3));
+        assert!(result.is_ok());
+        assert_eq!(rb.len(), 2);
     }
 
-    pub unsafe fn push(&mut self, frame: EnergyTelemetryFrame) -> Result<(), RingBufferError> {
-        self.inner.push(frame)
-    }
+    #[test]
+    fn scientific_rejects_on_overflow() {
+        let mut rb: SpScRingBuffer<2> = SpScRingBuffer::new();
+        rb.push(EnergyTelemetryFrame::new(1)).unwrap();
+        rb.push(EnergyTelemetryFrame::new(2)).unwrap();
 
-    #[inline]
-    pub fn pop(&mut self) -> Option<EnergyTelemetryFrame> {
-        unsafe { self.inner.pop() }
-    }
-
-    pub unsafe fn force_push(
-        &mut self,
-        frame: EnergyTelemetryFrame,
-    ) -> Result<(), RingBufferError> {
-        let read_idx = self.inner.read_cursor();
-        let write_idx = self.inner.write_cursor();
-
-        if write_idx.saturating_sub(read_idx) >= N {
-            self.inner
-                .advance_read(write_idx.saturating_sub(N.saturating_sub(1)));
-        }
-
-        self.inner.push(frame)
-    }
-
-    pub fn len(&self) -> usize {
-        self.inner.len()
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.inner.is_empty()
-    }
-
-    pub fn available_capacity(&self) -> usize {
-        self.inner.available_capacity()
+        let policy = BackpressurePolicy::scientific();
+        let result = policy.on_overflow(&mut rb, EnergyTelemetryFrame::new(3));
+        assert!(matches!(result, Err(RingBufferError::Overflow)));
     }
 }

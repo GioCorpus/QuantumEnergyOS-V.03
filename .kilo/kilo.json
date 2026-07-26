@@ -1,0 +1,21 @@
+{
+  "$schema": "https://app.kilo.ai/config.json",
+  "mcp": {
+    "jupyter": {
+      "type": "remote",
+      "url": "65001"
+    },
+    "nteract": {
+      "type": "local",
+      "command": [
+        "runt",
+        "mcp"
+      ],
+      "environment": {
+        "NTERACT_CHANNEL": "stable"
+      },
+      "enabled": true,
+      "timeout": 30000
+    }
+  }
+}

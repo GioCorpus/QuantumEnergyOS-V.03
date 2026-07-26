@@ -1,0 +1,43 @@
+[package]
+name = "qeos-telemetry"
+version = "0.3.0"
+edition = "2021"
+authors = ["QuantumEnergyOS Team"]
+description = "Real-time high-frequency energy telemetry ingestion pipeline for QuantumEnergyOS"
+license = "MIT"
+repository = "https://github.com/GioCorpus/QuantumEnergyOS"
+
+[dependencies]
+# Core concurrency and atomics
+# Using only std for userspace + kernel simulation
+# no_std compatibility is maintained for core data structures
+
+# Serialization for config/metadata
+serde = { version = "1.0", default-features = false, features = ["derive"], optional = true }
+serde_json = { version = "1.0", default-features = false, features = ["alloc"], optional = true }
+
+# Hashing for sensor IDs and integrity
+sha2 = { version = "0.10", default-features = false }
+
+# Random for calibration simulation
+rand = { version = "0.8", features = ["small_rng"] }
+
+[features]
+default = ["std"]
+std = ["serde", "serde_json"]
+alloc = []
+no_std = []
+
+[[bin]]
+name = "qeos-telemetryd"
+path = "src/bin/telemetryd.rs"
+required-features = ["std"]
+
+[[bin]]
+name = "qeos-telemetry-bench"
+path = "src/bin/bench.rs"
+required-features = ["std"]
+
+[lib]
+name = "qeos_telemetry"
+path = "src/lib.rs"

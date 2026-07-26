@@ -1,0 +1,19 @@
+[Unit]
+Description=QuantumEnergyOS Climate Daemon
+Documentation=man:climated(8)
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=qeos
+Group=qeos
+ExecStart=/usr/bin/climated
+Restart=on-failure
+RestartSec=10s
+LimitNOFILE=65536
+Environment=RUST_LOG=info
+Environment=RUST_BACKTRACE=1
+
+[Install]
+WantedBy=multi-user.target

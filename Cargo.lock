@@ -293,6 +293,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "qeos-telemetry"
+version = "0.3.0"
+dependencies = [
+ "rand",
+ "serde",
+ "serde_json",
+ "sha2",
+]
+
+[[package]]
 name = "quantum-browser-daemon"
 version = "0.2.0"
 

@@ -1,0 +1,18 @@
+[package]
+name = "photonicd"
+version = "0.3.0"
+edition = "2021"
+description = "QuantumEnergyOS Photonic Daemon - optical communication and signal processing"
+
+[dependencies]
+qeos-common = { path = "../../libs/qeos-common" }
+tokio = { version = "1.43", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+clap = { version = "4.5", features = ["derive"] }
+thiserror = "2.0"
+ndarray = "0.16"
+rustfft = "0.4"
+num-complex = "0.4"

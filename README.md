@@ -1,6 +1,6 @@
 # QuantumEnergyOS V.03
 
-QuantumEnergyOS is a Linux-based scientific operating system focused on energy optimization, climate monitoring, scientific computing, and quantum simulation.
+QuantumEnergyOS is a Arch-Linux-based scientific operating system focused on energy optimization, climate monitoring, scientific computing, and quantum simulation.
 
 ## Quick Start
 

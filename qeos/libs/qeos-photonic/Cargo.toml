@@ -8,5 +8,4 @@ description = "QuantumEnergyOS photonic simulation library"
 qeos-common = { path = "../qeos-common" }
 ndarray = "0.16"
 num-complex = "0.4"
-rustfft = "0.4"
 serde = { version = "1.0", features = ["derive"] }

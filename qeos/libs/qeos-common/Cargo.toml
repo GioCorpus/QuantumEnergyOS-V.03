@@ -11,5 +11,6 @@ thiserror = "2.0"
 uuid = { version = "1.7", features = ["v4", "serde"] }
 chrono = { version = "0.4", features = ["serde"] }
 tracing = "0.1"
+tokio = { version = "1.43", features = ["rt", "macros"] }
 config = "0.14"
 validator = { version = "0.18", features = ["derive"] }

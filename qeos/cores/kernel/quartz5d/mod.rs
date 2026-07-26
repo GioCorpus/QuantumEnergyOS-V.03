@@ -1,0 +1,23 @@
+pub mod cognitive;
+pub mod compression;
+pub mod digital_twin;
+pub mod hashing;
+pub mod holography;
+pub mod optimization;
+pub mod physical;
+pub mod prediction;
+pub mod telemetry;
+pub mod temporal;
+pub mod topology;
+
+pub use cognitive::{CognitiveNode, InferenceResult, NeuralGraph};
+pub use compression::{CompressionCodec, CompressionRatio, QuartzCompressor};
+pub use digital_twin::{DigitalTwin, TwinState, TwinSynchronization};
+pub use hashing::{HashAlgorithm, IntegrityProof, QuartzHasher};
+pub use holography::{HolographicDecoder, HolographicEncoder, WaveFront};
+pub use optimization::{ObjectiveFunction, OptimizationResult, QuartzOptimizer};
+pub use physical::{PhysicalModel, PhysicalState};
+pub use prediction::{ConfidenceInterval, Forecast, QuartzPredictor};
+pub use telemetry::{QuartzTelemetry, TelemetryBus, TelemetrySample};
+pub use temporal::{TemporalAxis, TimeSlice, Timeline};
+pub use topology::{Edge, TopologyGraph, Vertex};

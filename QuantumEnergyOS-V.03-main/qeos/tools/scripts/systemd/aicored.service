@@ -1,0 +1,18 @@
+[Unit]
+Description=QuantumEnergyOS AI Core Daemon
+Documentation=man:aicored(8)
+After=network.target
+
+[Service]
+Type=simple
+User=qeos
+Group=qeos
+ExecStart=/usr/bin/aicored
+Restart=on-failure
+RestartSec=5s
+LimitNOFILE=65536
+Environment=RUST_LOG=info
+Environment=RUST_BACKTRACE=1
+
+[Install]
+WantedBy=multi-user.target

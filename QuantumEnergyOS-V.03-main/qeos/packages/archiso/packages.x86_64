@@ -1,0 +1,168 @@
+# packages.x86_64 - QuantumEnergyOS package list
+
+# Core system
+base
+base-devel
+linux
+linux-headers
+linux-firmware
+grub
+efibootmgr
+os-prober
+dosfstools
+mtools
+mkinitcpio
+
+# System utilities
+systemd
+systemd-sysvcompat
+udisks2
+gvfs
+gvfs-mtp
+udiskie
+ntfs-3g
+exfatprogs
+dosfstools
+mtools
+
+# Shell and terminal
+zsh
+zsh-autosuggestions
+zsh-syntax-highlighting
+tmux
+fish
+kitty
+alacritty
+foot
+
+# System monitoring
+htop
+btop
+iotop
+neofetch
+fastfetch
+lm_sensors
+
+# File management
+ranger
+mc
+fd
+ripgrep
+fzf
+zoxide
+eza
+bat
+starship
+
+# Editors and development
+neovim
+helix
+git
+git-lfs
+github-cli
+openssh
+curl
+wget
+jq
+yq
+fnm
+nvm
+nodejs
+npm
+python
+python-pip
+python-pipx
+go
+rustup
+
+# Build tools
+base-devel
+cmake
+ninja
+meson
+pkgconf
+pacman-contrib
+
+# Container and virtualization
+docker
+docker-compose
+podman
+qemu-full
+virt-manager
+libvirt
+
+# Audio and media
+pipewire
+pipewire-pulse
+pipewire-alsa
+wireplumber
+pavucontrol
+
+# Graphics and display
+xorg-server
+xorg-xinit
+xorg-xrandr
+xorg-xsetroot
+xorg-xclipboard
+
+# Security
+polkit
+audit
+audit-libs
+fail2ban
+ufw
+
+# Python scientific environment
+python-numpy
+python-scipy
+python-matplotlib
+python-pandas
+python-jupyterlab
+python-ipython
+python-plotly
+python-seaborn
+
+# Quantum computing libraries
+python-qiskit
+python-qiskit-machine-learning
+python-qiskit-aer
+python-qiskit-ibm-provider
+qiskit-aer
+
+# AI/ML frameworks
+python-pytorch
+python-transformers
+python-huggingface-hub
+python-scikit-learn
+python-onnx
+python-onnxruntime
+
+# Libraries for photonic simulation
+gsl
+fftw
+openblas
+lapacke
+
+# Networking
+networkmanager
+network-manager-applet
+dhcpcd
+iwd
+
+# Fonts and appearance
+ttf-dejavu
+ttf-liberation
+ttf-fira-code
+ttf-firacode-nerd
+noto-fonts
+noto-fonts-extra
+noto-fonts-emoji
+ttf-jetbrains-mono
+ttf-jetbrains-mono-nerd
+
+# Qtile / Hyprland (optional compositors)
+qtile
+hyprland
+waybar
+dunst
+swww

@@ -4,6 +4,7 @@ members = [
     "quantum-browser-daemon",
     "photonic-core",
     "photonic-bridge",
+    "qeos-telemetry",
     "universe-simulator",
 ]
 

@@ -1,0 +1,35 @@
+# ═══════════════════════════════════════════════════════════════════════
+#  pqa_config.toml — Configuración del Analizador de Calidad de Energía
+#  QuantumEnergyOS V.02 — Mexicali Grid Profile
+# ═══════════════════════════════════════════════════════════════════════
+
+[device]
+id = "QP-PQA-MXLI-001"
+name = "Quantum-Photonic PQA - Mexicali Substation"
+simulation_mode = true
+sampling_rate_hz = 4000
+gpio_voltage_pin = 17
+gpio_current_pin = 18
+
+[thresholds]
+# Límites operativos para la red de Mexicali (basado en CFE/CENACE)
+nominal_voltage_v = 127.0
+max_voltage_v = 140.0
+min_voltage_v = 110.0
+nominal_frequency_hz = 60.0
+max_frequency_hz = 60.5
+min_frequency_hz = 59.5
+
+# Calidad de Energía
+max_thd_pct = 5.0
+critical_thd_pct = 8.0
+
+[calibration]
+voltage_factor = 1.023
+current_factor = 0.998
+photonic_gain = 12.5
+
+[alerts]
+enable_climate_orchestrator = true
+orchestrator_endpoint = "http://localhost:5000/api/v1/alerts"
+log_level = "info"

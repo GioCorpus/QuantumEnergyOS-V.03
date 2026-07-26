@@ -64,6 +64,7 @@ install-deps:
 rust-build:
 	@echo "── Compilando Rust (release)"
 	$(CARGO) build --workspace --exclude qeos-kernel --release 2>&1 | tail -3
+	$(CARGO) build -p qeos-telemetry --release 2>&1 | tail -3
 	@echo "✅ Rust compilado"
 
 kernel:
@@ -73,6 +74,10 @@ kernel:
 	    -Z build-std=core,alloc \
 	    -Z build-std-features=compiler-builtins-mem
 	@echo "✅ Kernel compilado"
+
+telemetry-test:
+	@echo "── Tests qeos-telemetry"
+	$(CARGO) test -p qeos-telemetry -- --nocapture 2>&1 | tail -20
 
 # ── Python ─────────────────────────────────────────────────────────────
 python-setup: $(VENV)/bin/python
@@ -143,7 +148,7 @@ qemu-test:
 	    -vga virtio
 
 # ── Tests ──────────────────────────────────────────────────────────────
-test: test-python test-rust
+test: test-python test-rust test-telemetry
 
 test-python: $(VENV)/bin/python
 	@echo "── Tests Python"
@@ -151,7 +156,11 @@ test-python: $(VENV)/bin/python
 
 test-rust:
 	@echo "── Tests Rust"
-	$(CARGO) test --workspace --exclude qeos-kernel -- --nocapture 2>&1 | tail -20
+	$(CARGO) test --workspace --exclude qeos-telemetry --exclude qeos-kernel -- --nocapture 2>&1 | tail -20
+
+test-telemetry:
+	@echo "── Tests qeos-telemetry"
+	$(CARGO) test -p qeos-telemetry -- --nocapture 2>&1 | tail -20
 
 test-qsharp: $(VENV)/bin/python
 	@echo "── Tests Q#"

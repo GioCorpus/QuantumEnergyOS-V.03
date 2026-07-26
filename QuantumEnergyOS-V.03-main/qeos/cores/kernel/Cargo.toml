@@ -1,0 +1,18 @@
+[package]
+name = "qeos-kernel"
+version = "0.3.0"
+edition = "2021"
+description = "QuantumEnergyOS Phase 2/3 kernel prototypes (scheduler, memory)"
+authors = ["Giovanny Anthony Corpus Bernal"]
+
+[lib]
+name = "qeos_kernel"
+path = "mod.rs"
+
+[dependencies]
+spin = "0.9"
+alloc = { version = "0.3", optional = true }
+
+[features]
+default = ["alloc"]
+std = ["alloc"]

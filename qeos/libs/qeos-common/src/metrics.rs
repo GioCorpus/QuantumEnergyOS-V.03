@@ -1,12 +1,13 @@
-use tracing::{field, info, instrument};
+use tracing::instrument;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use std::time::Instant;
 use tokio::sync::RwLock;
+use serde::Serialize;
 
 /// Thread-safe metrics collector for QuantumEnergyOS daemons
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct QeosMetrics {
     counters: Arc<RwLock<HashMap<String, AtomicU64>>>,
     gauges: Arc<RwLock<HashMap<String, AtomicU64>>>,
@@ -25,29 +26,27 @@ impl QeosMetrics {
     }
 
     #[instrument(skip(self))]
-    pub async fn increment_counter(&self, name: impl Into<String>) {
+    pub async fn increment_counter(&self, name: impl Into<String> + std::fmt::Debug) {
         let name = name.into();
-        let mut counters = self.counters.write().await;
-        counters
-            .entry(name.clone())
-            .and_modify(|c| c.fetch_add(1, Ordering::Relaxed))
-            .or_insert(AtomicU64::new(1));
-        info!(metric = "counter", name = %name, "incremented");
+        let mut counters: std::collections::hash_map::OccupiedEntry<String, AtomicU64> = {
+            let mut map = self.counters.write().await;
+            map.entry(name.clone()).or_insert(AtomicU64::new(0))
+        };
+        counters.get_mut().fetch_add(1, Ordering::Relaxed);
     }
 
     #[instrument(skip(self))]
-    pub async fn set_gauge(&self, name: impl Into<String>, value: u64) {
+    pub async fn set_gauge(&self, name: impl Into<String> + std::fmt::Debug, value: u64) {
         let name = name.into();
         let mut gauges = self.gauges.write().await;
         gauges.insert(name.clone(), AtomicU64::new(value));
-        info!(metric = "gauge", name = %name, value = %value, "set");
     }
 
     #[instrument(skip(self))]
-    pub async fn record_histogram(&self, name: impl Into<String>, value: f64) {
+    pub async fn record_histogram(&self, name: impl Into<String> + std::fmt::Debug, value: f64) {
         let name = name.into();
         let mut histograms = self.histograms.write().await;
-        histograms.entry(name.clone()).or_default().push(value);
+        histograms.entry(name).or_default().push(value);
     }
 
     pub fn uptime_seconds(&self) -> u64 {
@@ -71,7 +70,7 @@ impl QeosMetrics {
 
         let histogram_map: HashMap<String, HistogramStats> = histograms
             .iter()
-            .map(|(k, v)| {
+            .map(|(k, v): (_, &Vec<f64>)| {
                 let stats = Self::compute_histogram_stats(v);
                 (k.clone(), stats)
             })

@@ -6,13 +6,12 @@ description = "QuantumEnergyOS Photonic Daemon - optical communication and signa
 
 [dependencies]
 qeos-common = { path = "../../libs/qeos-common" }
-tokio = { version = "1.43", features = ["full"] }
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-clap = { version = "4.5", features = ["derive"] }
-thiserror = "2.0"
-ndarray = "0.16"
-rustfft = "0.4"
-num-complex = "0.4"
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+clap = { workspace = true }
+thiserror = { workspace = true }
+ndarray = { workspace = true }
+num-complex = { workspace = true }

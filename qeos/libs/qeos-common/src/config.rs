@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use thiserror::Error;
 use validator::Validate;
 
-use super::error::{QeosError, Result};
+use super::error::QeosError;
 
 #[derive(Debug, Error)]
 pub enum ConfigError {
@@ -18,7 +18,7 @@ pub enum ConfigError {
 }
 
 pub trait ConfigProvider: Send + Sync {
-    fn load(&self) -> Result<DaemonConfig>;
+    fn load(&self) -> Result<super::types::DaemonConfig, QeosError>;
 }
 
 #[derive(Debug, Clone, Deserialize, Validate)]

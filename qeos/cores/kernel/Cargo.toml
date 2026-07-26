@@ -11,8 +11,3 @@ path = "mod.rs"
 
 [dependencies]
 spin = "0.9"
-alloc = { version = "0.3", optional = true }
-
-[features]
-default = ["alloc"]
-std = ["alloc"]
