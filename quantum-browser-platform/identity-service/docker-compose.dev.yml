@@ -1,0 +1,22 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./sql/migrations:/migrations
+  identity:
+    build: .
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/postgres
+      JWT_SECRET: change-me
+    ports:
+      - "4608:4608"
+    volumes:
+      - ./:/usr/src/app
+    command: ["/usr/local/bin/identity_service"]
