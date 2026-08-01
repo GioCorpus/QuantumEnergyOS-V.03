@@ -14,7 +14,7 @@ async fn launch_dashboard_http_enqueued() {
         .route("/health", get(health))
         .route("/api/launch-dashboard", post(launch_dashboard));
 
-    let payload = LaunchRequest { dashboard_id: "quantum-dashboard".into(), workspace: Some("research".into()) };
+    let payload = LaunchRequest { dashboard_id: "quantum-dashboard".into(), workspace: Some("research".into()), browser_id: None };
     let body = serde_json::to_string(&payload).expect("serialize payload");
 
     let req = Request::builder()
