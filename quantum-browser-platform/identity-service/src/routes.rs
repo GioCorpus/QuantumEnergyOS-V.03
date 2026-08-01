@@ -34,6 +34,8 @@ impl ApiError {
     }
 }
 
+use crate::AppState;
+
 pub fn auth_routes() -> Router<PgPool> {
     Router::new()
         .route("/register", post(register))
@@ -42,7 +44,7 @@ pub fn auth_routes() -> Router<PgPool> {
 
 pub fn user_routes() -> Router<PgPool> {
     Router::new()
-        .route("/me", get(me).layer(middleware::from_fn(auth_middleware)))
+        .route("/me", get(me))
 }
 
 #[derive(Deserialize)]
@@ -51,76 +53,27 @@ struct RegisterReq {
     password: String,
 }
 
-async fn register(State(pool): State<PgPool>, Json(payload): Json<RegisterReq>) -> Result<impl IntoResponse, ApiError> {
-    let hash = {
-        let salt = SaltString::generate(&mut OsRng);
-        let argon = Argon2::default();
-        argon.hash_password(payload.password.as_bytes(), &salt)
-            .map(|h| h.to_string())
-            .map_err(|e| ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, format!("hash error: {}", e)))?
-    };
-
-    let id = Uuid::new_v4();
-    let role = "user";
-
-    let res = sqlx::query!(
-        r#"INSERT INTO users (id, email, password_hash, role) VALUES ($1, $2, $3, $4)"#,
-        id,
-        payload.email,
-        hash,
-        role
-    )
-    .execute(&pool)
-    .await;
-
-    match res {
-        Ok(_) => {
-            let public = UserPublic { id: id.to_string(), email: payload.email };
-            Ok((StatusCode::CREATED, Json(public)))
-        }
+async fn register(State(app): State<AppState>, Json(payload): Json<RegisterReq>) -> Result<impl IntoResponse, ApiError> {
+    let id = match app.auth.register(&payload.email, &payload.password).await {
+        Ok(id) => id,
         Err(e) => {
             tracing::error!("register error: {}", e);
-            // detect unique violation if possible
-            Err(ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, "could not create user"))
+            return Err(ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, "could not create user"));
         }
-    }
+    };
+    let public = UserPublic { id: id.to_string(), email: payload.email };
+    Ok((StatusCode::CREATED, Json(public)))
 }
 
-async fn login(State(pool): State<PgPool>, Json(payload): Json<LoginRequest>) -> Result<impl IntoResponse, ApiError> {
-    // fetch user by email
-    let rec = sqlx::query!("SELECT id, password_hash FROM users WHERE email = $1", payload.email)
-        .fetch_one(&pool)
-        .await;
-
-    if let Err(e) = rec {
-        tracing::warn!("login lookup failed: {}", e);
-        return Err(ApiError::new(StatusCode::UNAUTHORIZED, "invalid credentials"));
-    }
-
-    let row = rec.unwrap();
-    let ph = PasswordHash::new(&row.password_hash).map_err(|e| {
-        tracing::error!("hash parse: {}", e);
-        ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, "invalid password hash")
-    })?;
-
-    let v = Argon2::default().verify_password(payload.password.as_bytes(), &ph);
-    if v.is_err() {
-        return Err(ApiError::new(StatusCode::UNAUTHORIZED, "invalid credentials"));
-    }
-
-    // create JWT
-    let secret = env::var("JWT_SECRET").unwrap_or_else(|_| "secret".into());
-    let claims = serde_json::json!({"sub": row.id.to_string(), "exp": (chrono::Utc::now().timestamp() + 3600)});
-    let token = encode(&Header::default(), &claims, &EncodingKey::from_secret(secret.as_bytes()));
-
-    match token {
+async fn login(State(app): State<AppState>, Json(payload): Json<LoginRequest>) -> Result<impl IntoResponse, ApiError> {
+    match app.auth.login(&payload.email, &payload.password).await {
         Ok(t) => Ok((StatusCode::OK, Json(serde_json::json!({"token": t})))),
-        Err(e) => {
-            tracing::error!("jwt err: {}", e);
-            Err(ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, "could not create token"))
-        }
+        Err(_) => Err(ApiError::new(StatusCode::UNAUTHORIZED, "invalid credentials")),
     }
 }
+
+use std::sync::Arc;
+use crate::services::auth::AuthService;
 
 #[derive(Debug, Clone)]
 pub struct AuthUser {
@@ -133,28 +86,28 @@ struct Claims {
     exp: i64,
 }
 
-async fn auth_middleware<B>(req: Request<B>, next: Next<B>) -> Result<impl IntoResponse, ApiError> {
+async fn auth_middleware<B>(auth: Arc<AuthService>, req: Request<B>, next: Next<B>) -> Result<impl IntoResponse, ApiError> {
     // Check Authorization header
-    let auth = req.headers().get("authorization").and_then(|v| v.to_str().ok()).map(|s| s.to_string());
-    if auth.is_none() {
+    let auth_header = req.headers().get("authorization").and_then(|v| v.to_str().ok()).map(|s| s.to_string());
+    if auth_header.is_none() {
         return Err(ApiError::new(StatusCode::UNAUTHORIZED, "missing authorization header"));
     }
-    let auth = auth.unwrap();
-    if !auth.to_lowercase().starts_with("bearer ") {
+    let auth_header = auth_header.unwrap();
+    if !auth_header.to_lowercase().starts_with("bearer ") {
         return Err(ApiError::new(StatusCode::UNAUTHORIZED, "invalid authorization header"));
     }
-    let token = auth[7..].trim();
+    let token = auth_header[7..].trim();
 
-    let secret = env::var("JWT_SECRET").unwrap_or_else(|_| "secret".into());
-    let decoded = decode::<Claims>(token, &DecodingKey::from_secret(secret.as_bytes()), &Validation::default());
-    match decoded {
-        Ok(data) => {
-            // insert AuthUser into extensions
+    match auth.verify_token(token) {
+        Ok(claims) => {
             let mut req = req;
-            req.extensions_mut().insert(AuthUser { sub: data.claims.sub });
+            req.extensions_mut().insert(AuthUser { sub: claims.sub });
             Ok(next.run(req).await)
         }
-        Err(_) => Err(ApiError::new(StatusCode::UNAUTHORIZED, "invalid token"))
+        Err(e) => {
+            tracing::warn!("token verify failed: {}", e);
+            Err(ApiError::new(StatusCode::UNAUTHORIZED, "invalid token"))
+        }
     }
 }
 

@@ -9,9 +9,16 @@ Tech choices (initial):
 - Password hashing: argon2
 
 Quickstart (dev):
-- Set DATABASE_URL and JWT_SECRET in env or .env file
+- Required environment variables:
+  - DATABASE_URL: Postgres connection URL (e.g., postgres://user:pass@localhost:5432/dbname)
+  - JWT_SECRET: Strong secret used to sign JWTs (must be set; service will fail to start without it)
+- Load env in development via a .env file and dotenvy
 - Run migrations in sql/migrations/* against your Postgres DB
 - cargo run --bin identity_service
+
+Notes on testing:
+- Integration tests use testcontainers and require Docker available on the runner.
+- CI workflow runs the integration tests in a dedicated job.
 
 Planned endpoints (initial):
 - GET /health
