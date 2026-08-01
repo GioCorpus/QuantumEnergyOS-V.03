@@ -2,7 +2,7 @@ use axum::{routing::get, Router};
 use std::net::SocketAddr;
 use tracing_subscriber::{fmt, filter::EnvFilter};
 
-use qb_platform_backend::handlers::{health, launch_dashboard, open_browser};
+use qb_platform_backend::handlers::{health, launch_dashboard, open_browser, list_browsers};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -16,7 +16,8 @@ async fn main() -> anyhow::Result<()> {
         let app = Router::<()>::new()
             .route("/health", get(health))
             .route("/api/launch-dashboard", axum::routing::post(launch_dashboard))
-            .route("/api/open-browser/:name", get(open_browser));
+            .route("/api/open-browser/:name", get(open_browser))
+            .route("/api/browsers", get(list_browsers));
 
         let addr = SocketAddr::from(([127, 0, 0, 1], 4607));
         tracing::info!(%addr, "qb_platform_backend (scaffold) — server not started; use cargo run to start a full server");
