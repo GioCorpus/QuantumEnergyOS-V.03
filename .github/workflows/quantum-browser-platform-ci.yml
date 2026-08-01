@@ -1,0 +1,40 @@
+name: Quantum Browser Platform CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+      - name: Run backend tests
+        working-directory: quantum-browser-platform/backend
+        run: |
+          cargo test --verbose
+
+  frontend:
+    runs-on: ubuntu-latest
+    needs: backend
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Install pnpm
+        run: npm i -g pnpm
+      - name: Install frontend deps
+        working-directory: quantum-browser-platform/tauri-app
+        run: pnpm install
+      - name: Build frontend
+        working-directory: quantum-browser-platform/tauri-app
+        run: pnpm build
