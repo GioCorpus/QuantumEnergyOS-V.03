@@ -13,6 +13,8 @@ export default function App() {
   const [browsers, setBrowsers] = useState<BrowserInfo[]>([])
   const [selected, setSelected] = useState<string | null>(null)
   const [dashboardId, setDashboardId] = useState('quantum-dashboard')
+  const [adminToken, setAdminToken] = useState('')
+  const [tokenSavedMsg, setTokenSavedMsg] = useState<string | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -39,6 +41,16 @@ export default function App() {
     }
   }
 
+  async function saveToken() {
+    try {
+      await invoke('set_admin_token', { token: adminToken || null })
+      setTokenSavedMsg('Token saved')
+      setTimeout(() => setTokenSavedMsg(null), 3000)
+    } catch (e) {
+      setTokenSavedMsg(String(e))
+    }
+  }
+
   return (
     <div style={{ padding: 20 }}>
       <h1>Quantum Browser Platform — Tauri UI</h1>
@@ -47,6 +59,13 @@ export default function App() {
       <div style={{ marginBottom: 12 }}>
         <label>Dashboard ID: </label>
         <input value={dashboardId} onChange={e => setDashboardId(e.target.value)} />
+      </div>
+
+      <div style={{ marginBottom: 12 }}>
+        <label>Admin token (for privileged ops): </label>
+        <input value={adminToken} onChange={e => setAdminToken(e.target.value)} placeholder="bearer token or empty to clear" />
+        <button onClick={saveToken} style={{ marginLeft: 8 }}>Save token</button>
+        {tokenSavedMsg && <span style={{ marginLeft: 8 }}>{tokenSavedMsg}</span>}
       </div>
 
       <div>
