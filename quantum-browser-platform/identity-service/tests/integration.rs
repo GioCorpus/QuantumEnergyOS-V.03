@@ -31,11 +31,18 @@ async fn integration_register_login_me() -> anyhow::Result<()> {
     // start service on ephemeral port
     let listener = TcpListener::bind(("127.0.0.1", 0))?;
     let addr = listener.local_addr()?;
+
+    // create repository and auth service for the app state
+    let user_repo = identity_service::repositories::postgres::PostgresUserRepo::new(pool.clone());
+    let user_repo_arc: std::sync::Arc<dyn identity_service::repositories::UserRepo> = std::sync::Arc::new(user_repo);
+    let auth_service = std::sync::Arc::new(identity_service::services::auth::AuthService::new(user_repo_arc, "test-secret".into(), 3600));
+    let app_state = identity_service::AppState { auth: auth_service };
+
     let app = axum::Router::new()
         .route("/health", axum::routing::get(|| async { axum::Json("ok") }))
-        .nest("/auth", quantum_browser_platform::identity_service::routes::auth_routes())
-        .nest("/users", quantum_browser_platform::identity_service::routes::user_routes())
-        .with_state(pool.clone());
+        .nest("/auth", identity_service::routes::auth_routes())
+        .nest("/users", identity_service::routes::user_routes())
+        .with_state(app_state.clone());
     let server = axum::Server::from_tcp(listener)?.serve(app.into_make_service());
     let server_handle = tokio::spawn(async move { server.await.map_err(|e| anyhow::anyhow!(e)) });
 
