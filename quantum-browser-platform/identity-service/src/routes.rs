@@ -10,6 +10,30 @@ use http::{Request, StatusCode as HttpStatusCode};
 use axum::middleware::Next;
 use serde::{Serialize, Deserialize as SerdeDeserialize};
 
+#[derive(Serialize)]
+struct ErrorResponse {
+    code: u16,
+    message: String,
+}
+
+struct ApiError {
+    status: StatusCode,
+    message: String,
+}
+
+impl IntoResponse for ApiError {
+    fn into_response(self) -> axum::response::Response {
+        let body = Json(ErrorResponse { code: self.status.as_u16(), message: self.message });
+        (self.status, body).into_response()
+    }
+}
+
+impl ApiError {
+    fn new(status: StatusCode, message: impl Into<String>) -> Self {
+        Self { status, message: message.into() }
+    }
+}
+
 pub fn auth_routes() -> Router<PgPool> {
     Router::new()
         .route("/register", post(register))
@@ -27,13 +51,13 @@ struct RegisterReq {
     password: String,
 }
 
-async fn register(State(pool): State<PgPool>, Json(payload): Json<RegisterReq>) -> (StatusCode, Json<UserPublic>) {
+async fn register(State(pool): State<PgPool>, Json(payload): Json<RegisterReq>) -> Result<impl IntoResponse, ApiError> {
     let hash = {
         let salt = SaltString::generate(&mut OsRng);
         let argon = Argon2::default();
         argon.hash_password(payload.password.as_bytes(), &salt)
             .map(|h| h.to_string())
-            .unwrap_or_default()
+            .map_err(|e| ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, format!("hash error: {}", e)))?
     };
 
     let id = Uuid::new_v4();
@@ -52,16 +76,17 @@ async fn register(State(pool): State<PgPool>, Json(payload): Json<RegisterReq>) 
     match res {
         Ok(_) => {
             let public = UserPublic { id: id.to_string(), email: payload.email };
-            (StatusCode::CREATED, Json(public))
+            Ok((StatusCode::CREATED, Json(public)))
         }
         Err(e) => {
             tracing::error!("register error: {}", e);
-            (StatusCode::INTERNAL_SERVER_ERROR, Json(UserPublic { id: "".into(), email: "".into() }))
+            // detect unique violation if possible
+            Err(ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, "could not create user"))
         }
     }
 }
 
-async fn login(State(pool): State<PgPool>, Json(payload): Json<LoginRequest>) -> (StatusCode, Json<serde_json::Value>) {
+async fn login(State(pool): State<PgPool>, Json(payload): Json<LoginRequest>) -> Result<impl IntoResponse, ApiError> {
     // fetch user by email
     let rec = sqlx::query!("SELECT id, password_hash FROM users WHERE email = $1", payload.email)
         .fetch_one(&pool)
@@ -69,27 +94,31 @@ async fn login(State(pool): State<PgPool>, Json(payload): Json<LoginRequest>) ->
 
     if let Err(e) = rec {
         tracing::warn!("login lookup failed: {}", e);
-        return (StatusCode::UNAUTHORIZED, Json(serde_json::json!({"error":"invalid credentials"})));    }
+        return Err(ApiError::new(StatusCode::UNAUTHORIZED, "invalid credentials"));
+    }
 
     let row = rec.unwrap();
-    let ph = PasswordHash::new(&row.password_hash).map_err(|e| tracing::error!("hash parse: {}", e)).ok();
-    if ph.is_none() {
-        return (StatusCode::UNAUTHORIZED, Json(serde_json::json!({"error":"invalid credentials"})));    }
-    let ph = ph.unwrap();
+    let ph = PasswordHash::new(&row.password_hash).map_err(|e| {
+        tracing::error!("hash parse: {}", e);
+        ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, "invalid password hash")
+    })?;
 
     let v = Argon2::default().verify_password(payload.password.as_bytes(), &ph);
     if v.is_err() {
-        return (StatusCode::UNAUTHORIZED, Json(serde_json::json!({"error":"invalid credentials"})));    }
+        return Err(ApiError::new(StatusCode::UNAUTHORIZED, "invalid credentials"));
+    }
 
     // create JWT
     let secret = env::var("JWT_SECRET").unwrap_or_else(|_| "secret".into());
     let claims = serde_json::json!({"sub": row.id.to_string(), "exp": (chrono::Utc::now().timestamp() + 3600)});
-    let token = encode(&Header::default(), &claims, &EncodingKey::from_secret(secret.as_bytes())).map_err(|e| tracing::error!("jwt err: {}", e)).ok();
+    let token = encode(&Header::default(), &claims, &EncodingKey::from_secret(secret.as_bytes()));
 
-    if let Some(t) = token {
-        (StatusCode::OK, Json(serde_json::json!({"token": t})))
-    } else {
-        (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error":"could not create token"})))
+    match token {
+        Ok(t) => Ok((StatusCode::OK, Json(serde_json::json!({"token": t})))),
+        Err(e) => {
+            tracing::error!("jwt err: {}", e);
+            Err(ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, "could not create token"))
+        }
     }
 }
 
@@ -104,15 +133,15 @@ struct Claims {
     exp: i64,
 }
 
-async fn auth_middleware<B>(req: Request<B>, next: Next<B>) -> Result<impl IntoResponse, HttpStatusCode> {
+async fn auth_middleware<B>(req: Request<B>, next: Next<B>) -> Result<impl IntoResponse, ApiError> {
     // Check Authorization header
     let auth = req.headers().get("authorization").and_then(|v| v.to_str().ok()).map(|s| s.to_string());
     if auth.is_none() {
-        return Err(HttpStatusCode::UNAUTHORIZED);
+        return Err(ApiError::new(StatusCode::UNAUTHORIZED, "missing authorization header"));
     }
     let auth = auth.unwrap();
     if !auth.to_lowercase().starts_with("bearer ") {
-        return Err(HttpStatusCode::UNAUTHORIZED);
+        return Err(ApiError::new(StatusCode::UNAUTHORIZED, "invalid authorization header"));
     }
     let token = auth[7..].trim();
 
@@ -125,10 +154,10 @@ async fn auth_middleware<B>(req: Request<B>, next: Next<B>) -> Result<impl IntoR
             req.extensions_mut().insert(AuthUser { sub: data.claims.sub });
             Ok(next.run(req).await)
         }
-        Err(_) => Err(HttpStatusCode::UNAUTHORIZED)
+        Err(_) => Err(ApiError::new(StatusCode::UNAUTHORIZED, "invalid token"))
     }
 }
 
-async fn me(Extension(user): Extension<AuthUser>) -> (StatusCode, Json<serde_json::Value>) {
-    (StatusCode::OK, Json(serde_json::json!({"user": {"id": user.sub}})))
+async fn me(Extension(user): Extension<AuthUser>) -> Result<impl IntoResponse, ApiError> {
+    Ok((StatusCode::OK, Json(serde_json::json!({"user": {"id": user.sub}}))))
 }
