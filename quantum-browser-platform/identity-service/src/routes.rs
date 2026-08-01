@@ -1,11 +1,14 @@
-use axum::{routing::{post, get}, Router, extract::State, Json, http::StatusCode};
+use axum::{routing::{post, get}, Router, extract::State, Json, http::StatusCode, middleware, response::IntoResponse, Extension};
 use serde::Deserialize;
 use sqlx::PgPool;
 use uuid::Uuid;
 use crate::models::{NewUser, UserPublic, LoginRequest};
 use argon2::{Argon2, password_hash::{SaltString, PasswordHasher, PasswordVerifier, PasswordHash}, rand_core::OsRng};
-use jsonwebtoken::{encode, EncodingKey, Header};
+use jsonwebtoken::{encode, EncodingKey, Header, decode, DecodingKey, Validation};
 use std::env;
+use http::{Request, StatusCode as HttpStatusCode};
+use axum::middleware::Next;
+use serde::{Serialize, Deserialize as SerdeDeserialize};
 
 pub fn auth_routes() -> Router<PgPool> {
     Router::new()
@@ -15,7 +18,7 @@ pub fn auth_routes() -> Router<PgPool> {
 
 pub fn user_routes() -> Router<PgPool> {
     Router::new()
-        .route("/me", get(me))
+        .route("/me", get(me).layer(middleware::from_fn(auth_middleware)))
 }
 
 #[derive(Deserialize)]
@@ -90,7 +93,42 @@ async fn login(State(pool): State<PgPool>, Json(payload): Json<LoginRequest>) ->
     }
 }
 
-async fn me() -> (StatusCode, Json<serde_json::Value>) {
-    // placeholder, will require auth middleware later
-    (StatusCode::OK, Json(serde_json::json!({"user":"stub"})))
+#[derive(Debug, Clone)]
+pub struct AuthUser {
+    pub sub: String,
+}
+
+#[derive(SerdeDeserialize, Debug, Serialize)]
+struct Claims {
+    sub: String,
+    exp: i64,
+}
+
+async fn auth_middleware<B>(req: Request<B>, next: Next<B>) -> Result<impl IntoResponse, HttpStatusCode> {
+    // Check Authorization header
+    let auth = req.headers().get("authorization").and_then(|v| v.to_str().ok()).map(|s| s.to_string());
+    if auth.is_none() {
+        return Err(HttpStatusCode::UNAUTHORIZED);
+    }
+    let auth = auth.unwrap();
+    if !auth.to_lowercase().starts_with("bearer ") {
+        return Err(HttpStatusCode::UNAUTHORIZED);
+    }
+    let token = auth[7..].trim();
+
+    let secret = env::var("JWT_SECRET").unwrap_or_else(|_| "secret".into());
+    let decoded = decode::<Claims>(token, &DecodingKey::from_secret(secret.as_bytes()), &Validation::default());
+    match decoded {
+        Ok(data) => {
+            // insert AuthUser into extensions
+            let mut req = req;
+            req.extensions_mut().insert(AuthUser { sub: data.claims.sub });
+            Ok(next.run(req).await)
+        }
+        Err(_) => Err(HttpStatusCode::UNAUTHORIZED)
+    }
+}
+
+async fn me(Extension(user): Extension<AuthUser>) -> (StatusCode, Json<serde_json::Value>) {
+    (StatusCode::OK, Json(serde_json::json!({"user": {"id": user.sub}})))
 }
