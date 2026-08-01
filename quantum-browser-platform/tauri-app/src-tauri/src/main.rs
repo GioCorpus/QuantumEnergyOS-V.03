@@ -4,6 +4,9 @@ use serde::{Deserialize};
 use tauri::Manager;
 use std::sync::Mutex;
 
+// Keyring crate for secure OS-backed storage
+use keyring::Keyring;
+
 #[derive(Deserialize, serde::Serialize)]
 struct LaunchPayload {
     dashboard_id: String,
@@ -14,8 +17,33 @@ struct LaunchPayload {
 // App state to hold an optional admin token for privileged operations
 struct AdminToken(Mutex<Option<String>>);
 
+fn read_token_from_keyring() -> Option<String> {
+    let kr = Keyring::new("quantum-browser-platform", "admin-token");
+    match kr.get_password() {
+        Ok(pw) => Some(pw),
+        Err(_) => None,
+    }
+}
+
+fn write_token_to_keyring(token: &str) -> Result<(), String> {
+    let kr = Keyring::new("quantum-browser-platform", "admin-token");
+    kr.set_password(token).map_err(|e| format!("keyring set error: {}", e))
+}
+
+fn delete_token_from_keyring() -> Result<(), String> {
+    let kr = Keyring::new("quantum-browser-platform", "admin-token");
+    kr.delete_password().map_err(|e| format!("keyring delete error: {}", e))
+}
+
 #[tauri::command]
 fn set_admin_token(token: Option<String>, state: tauri::State<'_, AdminToken>) -> Result<(), String> {
+    // Persist to keyring when provided, or delete when None
+    if let Some(ref t) = token {
+        write_token_to_keyring(t)?;
+    } else {
+        let _ = delete_token_from_keyring();
+    }
+
     let mut guard = state.0.lock().map_err(|e| format!("lock error: {}", e))?;
     *guard = token;
     Ok(())
@@ -71,8 +99,10 @@ fn list_browsers(state: tauri::State<'_, AdminToken>) -> Result<String, String> 
 }
 
 fn main() {
+    // Read any existing token from keyring and populate initial state
+    let initial = read_token_from_keyring();
     tauri::Builder::default()
-        .manage(AdminToken(Mutex::new(None)))
+        .manage(AdminToken(Mutex::new(initial)))
         .invoke_handler(tauri::generate_handler![launch_dashboard, list_browsers, set_admin_token])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
