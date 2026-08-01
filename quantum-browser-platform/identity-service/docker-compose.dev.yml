@@ -19,4 +19,4 @@ services:
       - "4608:4608"
     volumes:
       - ./:/usr/src/app
-    command: ["/usr/local/bin/identity_service"]
+    entrypoint: ["/entrypoint.sh"]

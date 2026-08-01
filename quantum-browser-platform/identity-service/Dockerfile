@@ -6,8 +6,11 @@ WORKDIR /usr/src/app
 RUN cd ./ && cargo install --path . --locked --root /usr/local
 
 FROM debian:bookworm-slim
-RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y ca-certificates postgresql-client && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /usr/local/bin/identity_service /usr/local/bin/identity_service
+# copy entrypoint
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 ENV RUST_LOG=info
 EXPOSE 4608
-ENTRYPOINT ["/usr/local/bin/identity_service"]
+ENTRYPOINT ["/entrypoint.sh"]
