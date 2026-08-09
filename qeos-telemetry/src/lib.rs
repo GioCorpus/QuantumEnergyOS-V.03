@@ -41,6 +41,7 @@ pub mod dma;
 pub mod driver;
 pub mod frame;
 pub mod observability;
+pub mod pipeline;
 pub mod platform;
 pub mod ring_buffer;
 
@@ -49,6 +50,7 @@ pub use config::*;
 pub use dma::*;
 pub use driver::*;
 pub use frame::*;
+pub use pipeline::*;
 pub use platform::*;
 pub use ring_buffer::*;
 

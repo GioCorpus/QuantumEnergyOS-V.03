@@ -21,23 +21,33 @@ impl StructureFormation {
     }
 
     pub fn collapse(&mut self, dm: &DarkMatterSimulator, rp: &ReionizationPhase, time: f64) {
-        if rp.ionized_fraction < 0.5 { return; }  // aún oscuro, no hay feedback
+        if rp.ionized_fraction() < 0.5 { return; }  // aún oscuro, no hay feedback
 
         // Halos crecen por mergers + gas cooling
-        let growth = self.merger_rate * time / 1e9 * dm.lend_halo().clone() as f64;
+        let growth = self.merger_rate * time / 1e9 * dm.lend_halo();
         self.halo_mass += growth;
 
         self.filament_density += 0.005 * (self.halo_mass / 1e12).powf(2.0);  // web se densifica
-        
+
         self.entropy_guard.tick(growth * 1e-10);  // entropía con colapso
 
         if self.halo_mass > 1e14 {
             println!("¡Galaxia grande! Merger tree completo, estrellas en fila.");
         }
     }
+
+    pub fn halo_mass(&self) -> f64 {
+        self.halo_mass
+    }
 }
 
-# fn halo_stable() {
-    let mut sf = StructureFormation::new();
-    assert!(sf.halo_mass > 1e11, "¡Halo débil! No hay galaxias");
+#[cfg(test)]
+mod tests {
+    use super::StructureFormation;
+
+    #[test]
+    fn halo_starts_large() {
+        let sf = StructureFormation::new();
+        assert!(sf.halo_mass() > 1e11, "¡Halo débil! No hay galaxias");
+    }
 }

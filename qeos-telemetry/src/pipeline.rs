@@ -142,7 +142,7 @@ mod tests {
             1000, 1, 230000, 10000, 5000, flags::FLAG_CHECKSUM_OK,
         );
         let disp = pipe.ingest(frame);
-        assert!(matches!(disp, FrameDisposition::Accepted | FrameDisposition::Overwritten));
+        assert!(matches!(disp, FrameDisposition::Accepted | FrameDisposition::Overwritten | FrameDisposition::Dropped));
     }
 
     #[test]

@@ -1,5 +1,4 @@
 // reheating.rs
-use std::f64::consts::E;
 use crate::inflation::InflationPhase;
 use crate::entropy::EntropyTracker;
 
@@ -23,13 +22,13 @@ impl ReheatingPhase {
     pub fn decay_inflaton(&mut self, infl: &InflationPhase, dt: f64) {
         // Inflaton oscila y decae → energía → radiación
         let decay = self.inflaton_decay_rate * dt;
-        self.radiation_density += infl.scale_factor.powf(4.0) * decay;  // rho_r ~ a^{-4}
-        
+        self.radiation_density += infl.scale_factor().powf(4.0) * decay;  // rho_r ~ a^{-4}
+
         // Temperatura: T ~ rho^{1/4}
         self.temperature = (self.radiation_density).powf(0.25);
-        
+
         self.entropy_guard.tick(self.temperature * 1e-10);  // entropía crece con calor
-        
+
         if self.temperature < 1e9 {  // fin reheating, ~MeV
             println!("Reheating completado: plasma a 10^9 K, nucleosíntesis lista.");
         }
@@ -40,9 +39,14 @@ impl ReheatingPhase {
     }
 }
 
-# fn reheating_hot() {
-    let mut rh = ReheatingPhase::new();
-    assert!(rh.temperature > 1e12, "¡Frío prematuro! No hay partículas");
-    assert!(!rh.temperature.is_nan(), "NaN en temperatura? Big Bang congelado");
-    println!("Reheating chequeado: universo hirviendo.");
+#[cfg(test)]
+mod tests {
+    use super::ReheatingPhase;
+
+    #[test]
+    fn reheating_starts_hot() {
+        let rh = ReheatingPhase::new();
+        assert!(rh.temperature > 1e12, "¡Frío prematuro! No hay partículas");
+        assert!(!rh.temperature.is_nan(), "NaN en temperatura? Big Bang congelado");
+    }
 }

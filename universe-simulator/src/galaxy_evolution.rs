@@ -22,7 +22,7 @@ impl GalaxyEvolution {
 
     pub fn evolve_cluster(&mut self, sf: &StructureFormation, st: &StarFormation, time: f64) {
         // Mergers: clusters se juntan, masa sube
-        let merger_delta = sf.halo_mass * 0.1 * (time / 1e10);  // escala Gyr
+        let merger_delta = sf.halo_mass() * 0.1 * (time / 1e10);  // escala Gyr
         self.cluster_mass += merger_delta;
 
         // Estrellas: si hay formación, cluster crece
@@ -38,5 +38,16 @@ impl GalaxyEvolution {
         if self.cluster_mass > 1e15 {
             println!("¡Supercluster! Virgo-like, miles de galaxias unidas.");
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::GalaxyEvolution;
+
+    #[test]
+    fn cluster_starts_with_galaxies() {
+        let evolution = GalaxyEvolution::new();
+        assert!(evolution.galaxy_count > 0);
     }
 }
