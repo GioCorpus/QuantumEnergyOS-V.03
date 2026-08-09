@@ -1,0 +1,58 @@
+@startuml
+' QuantumEnergyOS high-level architecture
+skinparam dpi 150
+left to right direction
+
+package "User / UI" {
+  [tinywl (Core)]
+  [KDE Plasma (Workstation)]
+}
+
+package "Init & Service Manager" {
+  [Quantum Init]
+  [Service Manager]\n(Quantum Service Framework)
+  [Service Registry]
+  [UDS Service Bus\n(RPC + Pub/Sub)]
+}
+
+package "System Services" {
+  [Identity Service\n(RS256 + JWKS)]
+  [Policy Manager\n(ABAC / OPA-compatible)]
+  [Browser Manager]
+  [Dashboard Manager]
+  [Telemetry Service]
+  [AI Service]
+}
+
+package "Infrastructure" {
+  [HAL]
+  [Drivers\n(gpu, network, input, storage)]
+  [Kernel Primitives\n(scheduler, memory, IPC prims)]
+}
+
+' Relationships
+[Quantum Init] --> [Service Manager]
+[Service Manager] --> [Service Registry]
+[Service Manager] --> [UDS Service Bus\n(RPC + Pub/Sub)]
+[UDS Service Bus\n(RPC + Pub/Sub)] --> [Identity Service\n(RS256 + JWKS)]
+[UDS Service Bus\n(RPC + Pub/Sub)] --> [Policy Manager\n(ABAC / OPA-compatible)]
+[UDS Service Bus\n(RPC + Pub/Sub)] --> [Browser Manager]
+[UDS Service Bus\n(RPC + Pub/Sub)] --> [Dashboard Manager]
+[Browser Manager] --> [Telemetry Service]
+[Dashboard Manager] --> [Telemetry Service]
+[Service Manager] --> [Kernel Primitives\n(scheduler, memory, IPC prims)]
+[Kernel Primitives\n(scheduler, memory, IPC prims)] --> [HAL]
+[HAL] --> [Drivers\n(gpu, network, input, storage)]
+
+' Notes
+note right of [Identity Service\n(RS256 + JWKS)]
+  Expose /.well-known/jwks.json for signature verification
+  Short-lived access tokens + rotative refresh tokens
+end note
+
+note left of [Policy Manager\n(ABAC / OPA-compatible)]
+  Policy decisions broadcast via event bus
+  Services may cache decisions
+end note
+
+@enduml

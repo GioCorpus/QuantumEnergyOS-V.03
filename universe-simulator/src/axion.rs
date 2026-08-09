@@ -20,26 +20,30 @@ impl AxionField {
         }
     }
 
-    pub fn resonate_with_cavity(&self, cavity_freq: f64) -> f64 {
+    pub fn resonate_with_cavity(&mut self, cavity_freq: f64) -> f64 {
         // Si coinciden, boost de conversión a fotones —¡detección!
         let detuning = (self.frequency - cavity_freq).abs();
         let enhancement = if detuning < 1e-3 * self.frequency { PI } else { 1.0 };
-        
+
         self.entropy_guard.tick(0.005);  // axiones generan entropía lenta
         self.density * enhancement
     }
 
     pub fn lend_to_dm(&self, dm: &mut DarkMatterSimulator) {
-        // Axiones "prestados" al halo sin ownership —Arc sería ideal
         let extra_mass = self.density * 1e12;  // escalado galáctico
-        *dm.shared_halo += extra_mass;
+        dm.inject_mass(extra_mass);
         println!("Axiones inyectados: halo más robusto.");
     }
 }
 
-# fn axion_mass_positive() {
-    let ax = AxionField::new();
-    assert!(ax.mass > 0.0, "¡Axiones negativos? El universo se encoge");
-    assert!(!ax.mass.is_nan(), "NaN en masa axiónica? Bug cósmico");
-    println!("Axión chequeado: liviano y estable.");
+#[cfg(test)]
+mod tests {
+    use super::AxionField;
+
+    #[test]
+    fn axion_mass_is_positive() {
+        let ax = AxionField::new();
+        assert!(ax.mass > 0.0, "¡Axiones negativos? El universo se encoge");
+        assert!(!ax.mass.is_nan(), "NaN en masa axiónica? Bug cósmico");
+    }
 }

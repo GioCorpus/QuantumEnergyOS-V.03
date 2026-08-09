@@ -8,3 +8,4 @@ license = "MIT"
 
 [dependencies]
 libm = "0.2"
+rand = { version = "0.8", features = ["small_rng"] }

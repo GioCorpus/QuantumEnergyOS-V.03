@@ -1,5 +1,5 @@
 // cmb.rs
-use crate::nucleosynthesis::Nucleosynthesis;
+use rand::random;
 
 pub struct CosmicMicrowaveBackground {
     temp_now: f64,              // 2.725 K hoy
@@ -22,6 +22,17 @@ impl CosmicMicrowaveBackground {
 
     pub fn map_fluctuations(&self) -> f64 {
         // Simula anisotropías: semillas de inflación
-        self.fluctuation * (rand::random::<f64>() - 0.5)
+        self.fluctuation * (random::<f64>() - 0.5)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::CosmicMicrowaveBackground;
+
+    #[test]
+    fn decoupling_temperature_is_positive() {
+        let cmb = CosmicMicrowaveBackground::new();
+        assert!(cmb.get_temp_at_decoupling() > 0.0);
     }
 }

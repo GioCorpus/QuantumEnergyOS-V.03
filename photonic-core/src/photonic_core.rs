@@ -60,7 +60,7 @@ impl QuantumBackend {
             Self::PhotonicHardware { modulator: ModulatorType::LiNbO3, .. } => 0.1,
             Self::PhotonicHardware { modulator: ModulatorType::SiGe, .. }   => 0.5,
             Self::PhotonicHardware { modulator: ModulatorType::SiN, .. }    => 2.0,
-            Self::QSkirkitAer { .. } | Self::QSharpLocal { .. }              => 50.0,
+            Self::QiskitAer { .. } | Self::QSharpLocal { .. }                 => 50.0,
             Self::IBMQuantum { .. }                                           => 5_000.0, // 5s típico
             Self::Auto                                                        => 1.0,
         }
@@ -547,7 +547,7 @@ fn simulate_qaoa_rust(n: usize, p: usize, gamma: &[f64], beta: &[f64]) -> Vec<u8
         for layer in 0..p.min(gamma.len()).min(beta.len()) {
             let phase = gamma[layer] * (node as f64 / n as f64);
             let mix   = beta[layer];
-            prob += 0.3 * (phase * mix).cos() * (-layer as f64 * 0.1).exp();
+            prob += 0.3 * (phase * mix).cos() * (-(layer as f64) * 0.1).exp();
         }
         bitstring[node] = if prob > 0.5 { 1 } else { 0 };
     }
