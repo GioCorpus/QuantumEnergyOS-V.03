@@ -28,11 +28,9 @@ impl QeosMetrics {
     #[instrument(skip(self))]
     pub async fn increment_counter(&self, name: impl Into<String> + std::fmt::Debug) {
         let name = name.into();
-        let mut counters: std::collections::hash_map::OccupiedEntry<String, AtomicU64> = {
-            let mut map = self.counters.write().await;
-            map.entry(name.clone()).or_insert(AtomicU64::new(0))
-        };
-        counters.get_mut().fetch_add(1, Ordering::Relaxed);
+        let mut counters = self.counters.write().await;
+        let counter = counters.entry(name).or_insert(AtomicU64::new(0));
+        counter.fetch_add(1, Ordering::Relaxed);
     }
 
     #[instrument(skip(self))]

@@ -13,8 +13,8 @@ pub enum ConfigError {
     #[error("Parse error: {0}")]
     Parse(String),
 
-    #[error("Missing field: {field} in {source}")]
-    MissingField { field: String, source: String },
+    #[error("Missing field: {field} in {section}")]
+    MissingField { field: String, section: String },
 }
 
 pub trait ConfigProvider: Send + Sync {

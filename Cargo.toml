@@ -2,6 +2,9 @@
 resolver = "2"
 members = [
     "quantum-browser-daemon",
+    "quantum-browser-platform/backend",
+    "quantum-browser-platform/identity-service",
+    "quantum-browser-platform/tauri-app/src-tauri",
     "photonic-core",
     "photonic-bridge",
     "qeos-telemetry",
@@ -19,6 +22,7 @@ members = [
     "qeos/cores/kernel",
     "qeos/tests",
 ]
+exclude = []
 
 [workspace.dependencies]
 tokio = { version = "1.43", features = ["full"] }
