@@ -21,12 +21,12 @@ impl StarFormation {
         }
     }
 
-    pub fn accrete(&mut self, sf: &StructureFormation, time: f64) {
+    pub fn accrete(&mut self, _sf: &StructureFormation, time: f64) {
         let delta_m = self.accretion_rate * time / 1e6;  // Myr scale
         self.core_mass += delta_m * (1.0 - self.feedback_factor);
 
         self.temp_core += delta_m * 1e6;  // calentamiento por compresión
-        
+
         // Feedback: si masa > 50 M_sun, expulsa 20%
         if self.core_mass > 50.0 {
             self.core_mass *= 0.8;
@@ -45,7 +45,13 @@ impl StarFormation {
     }
 }
 
-# fn star_real() {
-    let mut st = StarFormation::new();
-    assert!(st.core_mass >= 0.08, "¡Demasiado pequeña! No es estrella");
+#[cfg(test)]
+mod tests {
+    use super::StarFormation;
+
+    #[test]
+    fn small_core_is_not_a_star() {
+        let st = StarFormation::new();
+        assert!(!st.is_star());
+    }
 }

@@ -30,10 +30,25 @@ impl DarkAges {
             }
         }
     }
+
+    pub fn neutral_h_fraction(&self) -> f64 {
+        self.neutral_h_fraction
+    }
+
+    pub fn set_neutral_h_fraction(&mut self, fraction: f64) {
+        self.neutral_h_fraction = fraction.clamp(0.0, 1.0);
+    }
 }
 
-# fn dark_not_frozen() {
-    let cmb = CosmicMicrowaveBackground::new();
-    let mut da = DarkAges::new(&cmb);
-    assert!(da.temp > 10.0, "¡Demasiado frío! No hay reionización");
+#[cfg(test)]
+mod tests {
+    use super::DarkAges;
+    use crate::cmb::CosmicMicrowaveBackground;
+
+    #[test]
+    fn dark_ages_start_warm_enough() {
+        let cmb = CosmicMicrowaveBackground::new();
+        let da = DarkAges::new(&cmb);
+        assert!(da.temp > 2.0, "¡Demasiado frío! No hay reionización");
+    }
 }

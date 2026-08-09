@@ -1,7 +1,6 @@
 // inflation.rs
-use std::f64::consts::{E, PI};
+use std::f64::consts::E;
 use crate::entropy::EntropyTracker;
-use crate::axion::AxionField;  // para semillas post-inflación
 
 pub struct InflationPhase {
     scale_factor: f64,          // a(t) ~ e^{H t}, H constante
@@ -25,16 +24,20 @@ impl InflationPhase {
     pub fn expand(&mut self, dt: f64) -> f64 {
         // Inflación: escala exponencial, flatness problem solved
         self.scale_factor *= E.powf(self.hubble_param * dt);
-        
+
         // Genera fluctuaciones cuánticas como ruido
         let delta_rho = self.fluctuation_amp * (rand::random::<f64>() - 0.5);
         self.entropy_guard.tick(delta_rho.abs() * 1e10);  // entropía crece con expansión
-        
+
         if self.scale_factor > 1e60 {  // fin inflación, reheating
             println!("Inflación terminada: universo plano y listo para nucleosíntesis.");
             self.inject_seeds();
         }
-        
+
+        self.scale_factor
+    }
+
+    pub fn scale_factor(&self) -> f64 {
         self.scale_factor
     }
 
@@ -44,9 +47,14 @@ impl InflationPhase {
     }
 }
 
-# fn inflation_positive() {
-    let mut infl = InflationPhase::new();
-    assert!(infl.hubble_param > 0.0, "¡H negativo? Big Crunch instantáneo");
-    assert!(!infl.scale_factor.is_nan(), "NaN en expansión? Bug en el Big Bang");
-    println!("Inflación chequeada: expansión eterna.");
+#[cfg(test)]
+mod tests {
+    use super::InflationPhase;
+
+    #[test]
+    fn inflation_phase_starts_positive() {
+        let infl = InflationPhase::new();
+        assert!(infl.hubble_param > 0.0, "¡H negativo? Big Crunch instantáneo");
+        assert!(!infl.scale_factor.is_nan(), "NaN en expansión? Bug en el Big Bang");
+    }
 }

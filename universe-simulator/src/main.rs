@@ -7,6 +7,10 @@ mod reheating;
 mod nucleosynthesis;
 mod cmb;
 mod dark_ages;
+mod reionization;
+mod star_formation;
+mod structure_formation;
+mod galaxy_evolution;
 
 use entropy::EntropyTracker;
 use inflation::InflationPhase;
@@ -35,7 +39,7 @@ fn main() {
 
         if !entropy.is_stable() {
             println!("¡Heat death! Pero... inyectamos foam.");
-            entropy.total *= 0.99;
+            entropy.relax(0.99);
         }
     }
 

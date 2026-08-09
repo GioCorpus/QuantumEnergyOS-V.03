@@ -19,8 +19,12 @@ impl ReionizationPhase {
         }
     }
 
+    pub fn ionized_fraction(&self) -> f64 {
+        self.ionized_fraction
+    }
+
     pub fn ionize(&mut self, da: &mut DarkAges, time: f64) {
-        if da.neutral_h_fraction > 0.99 { return; }  // aún muy oscuro
+        if da.neutral_h_fraction() > 0.99 { return; }  // aún muy oscuro
 
         let delta_ion = self.uv_flux * (time / 1e8).powf(2.0);  // exponencial con galaxias
         self.ionized_fraction += delta_ion;
@@ -31,7 +35,7 @@ impl ReionizationPhase {
             println!("Burbuja ionizada —luz se expande.");
         }
 
-        da.neutral_h_fraction = 1.0 - self.ionized_fraction;
+        da.set_neutral_h_fraction(1.0 - self.ionized_fraction);
         self.entropy_guard.tick(delta_ion * 1e-8);  // entropía sube con fotones
 
         if self.ionized_fraction > 0.99 {
@@ -40,7 +44,13 @@ impl ReionizationPhase {
     }
 }
 
-# fn reion_not_early() {
-    let mut rp = ReionizationPhase::new();
-    assert!(rp.ionized_fraction < 0.1, "¡Ionizado prematuro! Estrellas antes de formarse?");
+#[cfg(test)]
+mod tests {
+    use super::ReionizationPhase;
+
+    #[test]
+    fn starts_not_yet_ionized() {
+        let rp = ReionizationPhase::new();
+        assert!(rp.ionized_fraction < 0.1, "¡Ionizado prematuro! Estrellas antes de formarse?");
+    }
 }

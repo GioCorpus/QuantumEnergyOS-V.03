@@ -30,7 +30,7 @@ impl Nucleosynthesis {
 
         // Helio: casi todo neutrones se convierten en He-4
         self.helium_yield = 2.0 * self.neutron_fraction / (1.0 + self.neutron_fraction);
-        
+
         self.entropy_guard.tick(self.temp * 1e-12);  // entropía se estabiliza
 
         if self.temp < 1e7 {
@@ -39,7 +39,13 @@ impl Nucleosynthesis {
     }
 }
 
-# fn helium_real() {
-    let mut ns = Nucleosynthesis::new();
-    assert!(ns.helium_yield > 0.24 && ns.helium_yield < 0.26, "¡Helio off! Universo sin estrellas");
+#[cfg(test)]
+mod tests {
+    use super::Nucleosynthesis;
+
+    #[test]
+    fn helium_yield_stays_realistic() {
+        let mut ns = Nucleosynthesis::new();
+        assert!(ns.helium_yield > 0.24 && ns.helium_yield < 0.26, "¡Helio off! Universo sin estrellas");
+    }
 }

@@ -17,24 +17,43 @@
 //    - Chips CMOS-PIC: Si/SiO₂, integración CMOS standard
 // ═══════════════════════════════════════════════════════════════════════
 
-#![no_std]
+#![cfg_attr(not(feature = "std"), no_std)]
 #![allow(clippy::excessive_precision)]
 
+#[cfg(not(feature = "std"))]
 extern crate alloc;
+#[cfg(feature = "std")]
+extern crate std;
 
 use core::f64::consts::PI;
-use libm::{cos, sin, sqrt, exp, ln};
+use libm::{cos, sin, sqrt, exp, log};
 use num_complex::Complex64;
 use heapless::Vec as HVec;
 
-pub mod mzi;
-pub mod homodyne;
-pub mod spdc;
-pub mod error_correction;
-pub mod squeezed;
-pub mod circuit;
-pub mod vqe;
-pub mod qaoa;
+pub mod ash {
+    pub mod vk {
+        #[derive(Clone, Copy, Debug, Default)]
+        pub struct SurfaceFormatKHR {
+            pub format: Format,
+            pub color_space: ColorSpaceKHR,
+        }
+
+        #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+        pub struct ColorSpaceKHR(pub u32);
+
+        impl ColorSpaceKHR {
+            pub const EXTENDED_SRGB_LINEAR_EXT: Self = Self(0);
+            pub const HDR10_ST2084_EXT: Self = Self(1);
+        }
+
+        #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+        pub struct Format(pub u32);
+
+        impl Format {
+            pub const A2B10G10R10_UNORM_PACK32: Self = Self(0);
+        }
+    }
+}
 
 // Módulos avanzados integrados
 pub mod photonic_core;
@@ -45,11 +64,6 @@ pub mod storage;
 pub mod paz_luz;
 pub mod types;
 
-pub use mzi::*;
-pub use homodyne::*;
-pub use spdc::*;
-pub use error_correction::*;
-pub use circuit::*;
 pub use photonic_core::*;
 pub use energy_optimizer::*;
 pub use quartz_4d::*;
@@ -290,7 +304,7 @@ pub mod homodyne {
         }
     }
 
-    fn log10(x: f64) -> f64 { ln(x) / ln(10.0) }
+    fn log10(x: f64) -> f64 { log(x) / log(10.0) }
 
     /// Resultado de una medición homodyne.
     #[derive(Debug, Clone, Copy)]
@@ -361,7 +375,7 @@ pub mod homodyne {
         let b = (seed.wrapping_mul(2_862_933_555_777_941_757)
                     .wrapping_add(3_037_000_493)) as f64
                 / u64::MAX as f64;
-        std * sqrt(-2.0 * ln(a.max(1e-300))) * cos(2.0 * PI * b)
+        std * sqrt(-2.0 * log(a.max(1e-300))) * cos(2.0 * PI * b)
     }
 
     /// Detector SNSPD (Superconducting Nanowire Single Photon Detector)
